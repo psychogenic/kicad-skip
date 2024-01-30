@@ -67,12 +67,16 @@ class NamedElementContainer(ElementContainer):
             name = re.sub(r'[^\w\d_]', '_', name)
             self._named[name] = el
             
-            
+    
+    def _cleanse_key(self, key:str):
+        return re.sub(r'[^\w\d_]', '_', key)
+    
+    
     def elementRemove(self, elKey:str):
         del self._named[elKey]
         
     def elementAdd(self, elKey:str, element):
-        self._named[elKey] = element 
+        self._named[self._cleanse_key(elKey)] = element 
         
     def __contains__(self, key:str):
         return key in self._named

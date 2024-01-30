@@ -74,7 +74,7 @@ class ParsedValue(AccessesTree):
         simple lists are replaced by specialized containers in higher levels 
         to allow for things like named-access
         
-          schematic.symbol.C4.property.description.value
+          schematic.symbol.C4.property.Description.value
          
         rather than only having
         
@@ -191,7 +191,7 @@ class ParsedValue(AccessesTree):
             level.
             
             So 
-              newProp = sch.symbol.R10.property.description.clone()
+              newProp = sch.symbol.R10.property.Description.clone()
               
             Creates a new property *on* symbol "R10"
             
@@ -205,7 +205,7 @@ class ParsedValue(AccessesTree):
         coords[-1] = idx 
         clonedObj = ParsedValue(self.sourceTree, rawclone, coords, self.parent)
         if self.parent is not None:
-            if hasattr('children', self.parent):
+            if hasattr(self.parent, 'children'):
                 self.parent.children.append(clonedObj)
             else:
                 log.error(f'Object parent exists but has no children?? {self.parent}')
@@ -440,7 +440,7 @@ class ParsedValue(AccessesTree):
         v = self.value 
         
         if hasattr(self, 'property') and hasattr(self.property, 'reference'):
-            v = self.property.reference.value 
+            v = self.property.Reference.value 
         else:
             if v is None:
                 v = ''
@@ -477,8 +477,12 @@ class ParsedValueWrapper:
     def __str__(self):
         return str(self._pv)
     
-class ArbitraryNamedParsedValueWrapper(ParsedValueWrapper):
     
+    @property 
+    def wrapped_parsed_value(self):
+        return self._pv
+    
+class ArbitraryNamedParsedValueWrapper(ParsedValueWrapper):
     def __init__(self, pv:ParsedValue):
         super().__init__(pv)
         
@@ -491,12 +495,11 @@ class ArbitraryNamedParsedValueWrapper(ParsedValueWrapper):
         self._name_coords.append(1)
         self._val_coords.append(2)
         
-        
-        name = pv.children[0].lower()
-        name = re.sub(r'[^\w\d_]', '_', name)
+        name = self._cleanse_name(pv.children[0])
         self._name = name
     
-    
+    def _cleanse_name(self, nm:str):
+        return re.sub(r'[^\w\d_]', '_', nm)
     @property 
     def name(self):
         '''
@@ -515,7 +518,7 @@ class ArbitraryNamedParsedValueWrapper(ParsedValueWrapper):
     def name(self, setTo:str):
         oldName = self._name
         self.children[0] = setTo
-        name = re.sub(r'[^\w\d_]', '_', setTo)
+        name = self._cleanse_name(setTo)
         self._setOnTree(self._name_coords, setTo)
         self.updateParentContainer(oldName, name)
         self._name = name

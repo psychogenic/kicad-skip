@@ -35,7 +35,7 @@ Each attribute will either be:
 Dedicated containers are used in some instances.  These can act just like lists
 
 for component in sch.symbol:
-    print(component.property.reference.value)
+    print(component.property.Reference.value)
 
 But often also as objects with attributes. For symbols (components) these are the
 reference of the component.

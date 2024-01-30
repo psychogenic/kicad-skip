@@ -15,7 +15,7 @@ class SymbolContainer(NamedElementContainer):
         It acts like both a list and an object where each component is an attribute
         
         for component in schem.symbol:
-            print(component.property.reference.value)
+            print(component.property.Reference.value)
             
         # or 
         if len(schem.symbol) > 4:
@@ -32,7 +32,7 @@ class SymbolContainer(NamedElementContainer):
 
     '''
     def __init__(self, elements:list):
-        super().__init__(elements, lambda s: s.property.reference.value)
+        super().__init__(elements, lambda s: s.property.Reference.value)
         
     def reference_startswith(self, prefix:str):
         '''
@@ -44,7 +44,7 @@ class SymbolContainer(NamedElementContainer):
               
             will give you a list of all the caps.  
         '''
-        return list(filter(lambda s: s.property.reference.value.startswith(prefix), self))
+        return list(filter(lambda s: s.property.Reference.value.startswith(prefix), self))
     
     def reference_matches(self, regex:str):
         '''
@@ -62,10 +62,10 @@ class SymbolContainer(NamedElementContainer):
             <symbol R42>, <symbol R43>]
               
         '''
-        return list(filter(lambda s: re.match(regex, s.property.reference.value), self))
+        return list(filter(lambda s: re.match(regex, s.property.Reference.value), self))
     
 
-class SymbolWrapper(ElementWithPropertiesWrapper):
+class Symbol(ElementWithPropertiesWrapper):
     def __init__(self, pv:ParsedValue):
         super().__init__(pv)
         
@@ -73,11 +73,15 @@ class SymbolWrapper(ElementWithPropertiesWrapper):
     def allReferences(self):
         return self.getElementsByEntityType('reference')
     
+    @property
+    def is_power(self):
+        return self.lib_id.value.startswith('power:')
+    
     def __lt__(self, other):
-        return self.property.reference.value < other.property.reference.value
+        return self.property.Reference.value < other.property.Reference.value
   
     def __repr__(self):
-        v = self.property.reference.value
+        v = self.property.Reference.value
         baseRef = v
         if hasattr(self, 'instances'):
             for proj in self.instances.getElementsByEntityType('project'):

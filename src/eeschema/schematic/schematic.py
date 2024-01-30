@@ -38,8 +38,8 @@ Each attribute will either be:
 Dedicated containers are used in some instances.  These can act just like lists
 
 for component in sch.symbol:
-    print(f'Setting datasheet and DNP on {component.property.reference.value}')
-    component.property.datasheet.value = 'Ho.pdf'
+    print(f'Setting datasheet and DNP on {component.property.Reference.value}')
+    component.property.Datasheet.value = 'Ho.pdf'
     component.dnp = True
 
 But often also as objects with attributes. For symbols (components) these are the
@@ -61,7 +61,7 @@ Created on Jan 29, 2024
 
 from eeschema.sexp.util import loadTree, writeTree
 from eeschema.sexp.parser import ParsedValue
-from eeschema.schematic.symbol import SymbolContainer, SymbolWrapper
+from eeschema.schematic.symbol import SymbolContainer, Symbol
 from eeschema.sheet import SheetWrapper
 import logging 
 log = logging.getLogger(__name__)
@@ -121,7 +121,7 @@ class Schematic:
             'symbol': SymbolContainer
         }
         dedicatedWrapper = {
-            'symbol': SymbolWrapper,
+            'symbol': Symbol,
             'sheet': SheetWrapper
         }
         for k,v in bytype.items():
