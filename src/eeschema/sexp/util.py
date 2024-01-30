@@ -5,7 +5,7 @@ Created on Jan 29, 2024
 @copyright: Copyright (C) 2024 Pat Deegan, https://psychogenic.com
 '''
 import sexpdata
-
+import re
 import logging 
 log = logging.getLogger(__name__)
 
@@ -16,7 +16,13 @@ def loadTree(fpath:str):
 def writeTree(fpath:str, tree):
     remove_nones(tree)
     with open(fpath, 'w') as f:
-        f.write(sexpdata.dumps(tree))
+        # no way to pretty print this what the fuck?
+        # lines get too long with some schems, when it's all 
+        # clumped into a bunch
+        as_str = sexpdata.dumps(tree)
+        for elname in ['property', 'symbol', 'wire']:
+            as_str = re.sub(f'\(\s*{elname}', f'\n({elname}', as_str)
+        f.write(as_str)
     
 def list_splice(target, start, delete_count=None, *items):
     """Remove existing elements and/or add new elements to a list.
