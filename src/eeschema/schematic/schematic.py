@@ -1,4 +1,58 @@
 '''
+Main handle to kicad schematic.
+
+This is the top level object for all the action in this library.  If you
+
+
+import eeschema
+sch = eeschema.Schematic('path/to/file.kicad_sch')
+
+
+then sch will hold a number of attributes, which depend on the contents
+of the schematic.
+
+
+*DO* use a console and TAB-completion to explore the object.
+
+sch.<TAB><TAB>  will show a number of members.  
+Some of most interest are likely
+
+
+  sch.symbol
+  sch.title_block
+  sch.text
+
+but you'll also probably find
+
+sch.wire
+sch.label
+sch.junction
+sch.rectangle
+and more.
+
+Each attribute will either be:
+  * an object 
+  * a basic list of objects
+  * a container of objects
+
+Dedicated containers are used in some instances.  These can act just like lists
+
+for component in sch.symbol:
+    print(f'Setting datasheet and DNP on {component.property.reference.value}')
+    component.property.datasheet.value = 'Ho.pdf'
+    component.dnp = True
+
+But often also as objects with attributes. For symbols (components) these are the
+reference of the component, which is very useful when operating in a console.
+
+Use tab-completion to see them all
+
+sch.symbol.<TAB><TAB>
+
+and use 'em.
+sch.symbol.C42.dnp = True
+
+
 Created on Jan 29, 2024
 
 @author: Pat Deegan
@@ -14,14 +68,40 @@ log = logging.getLogger(__name__)
 
 class Schematic:
     def __init__(self, filepath:str):
+        '''
+            c'tor for the schematic object, gateway to everything in the 
+            kicad_sch file.
+            
+            @param filepath: path/to/schematic.kicad_sch
+            
+            This is the main handle to a schematic sheet.
+            
+            @note: No checking is done at all.  If the file DNE, it dies.  
+            If it's not a kicad schematic... who knows.
+        '''
         self.tree = None
         self._symbols_by_name = None
+        self._added_attribs = []
         self.read(filepath)
     
     def read(self, filepath:str):
+        '''
+            Read in a kicad_sch file.
+            @param filepath: path/to/schematic.kicad_sch
+        '''
         self._filepath = filepath
         self.tree = loadTree(filepath)
         self._symbols_by_name = None
+        
+        
+        if len(self._added_attribs):
+            # we've generated attribs, this is a reload/fresh load
+            # get rid of old stuff hanging around
+            for aname in self._added_attribs:
+                delattr(self, aname)
+        
+        # clear out the list
+        self._added_attribs = []
             
         bytype = {}
         for i, level in enumerate(self.tree):
@@ -49,6 +129,8 @@ class Schematic:
             if k is None:
                 continue 
             
+            
+            self._added_attribs.append(k)
             if k in dedicatedWrapper:
                 wrapClass = dedicatedWrapper[k]
                 numVals = len(v)
@@ -66,34 +148,30 @@ class Schematic:
                         setattr(self, k, v)
     
     def write(self, fpath:str):
+        '''
+            Write current schematic tree to file.
+            @param fpath: path/to/output.kicad_sch
+            
+            @note: writes the file you specify no checks or hand-holding 
+        '''
         writeTree(fpath, self.tree)
         log.info(f"Wrote tree to {fpath}")
         
     
     def reload(self):
+        '''
+            reloads originally loaded file
+        '''
         log.info(f"Reloading '{self._filepath}'")
         self.read(self._filepath)
         
     def overwrite(self):
+        '''
+            overwrites originally loaded file
+        '''
         log.info(f"Overwriting loaded file '{self._filepath}'")
         self.write(self._filepath)   
          
-    @property
-    def symbols_by_nameDEADBEEF(self):
-        if self._symbols_by_name is None:
-            if not hasattr(self, 'symbol'):
-                return None
-            
-            self._symbols_by_name = dict()
-            for s in self.symbol:
-                ref = s.property.reference.value
-                if ref in self._symbols_by_name:
-                    log.warn(f'You have duplicate "{ref}" in this schematic..?')
-                    
-                self._symbols_by_name[ref] = s
-                
-        return self._symbols_by_name
-        
     
     def __str__(self):
         if hasattr(self,'title_block'):

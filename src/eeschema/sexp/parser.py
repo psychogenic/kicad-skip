@@ -42,14 +42,160 @@ class AccessesTree:
 
 
 class ParsedValue(AccessesTree):
+    '''
+        The result of parsing a basic sexpdata value.
+        
+        It is augmented in many ways to allow for actual sane usage.
+        
+        Short version is will parse simple expressions, like
+        [Symbol('lib_id'), 'Device:C_Small']
+        so they have a 'value'
+            lib_id.value == 'Device:C_Small'
+        which may be used to overwrite the value
+            lib_id.value = 'lalala'
+        
+        More complex objects may have children, a list of elements also ParsedValue
+        recursively
+        E.g. 
+         [Symbol('instances'), 
+            [Symbol('project'), 
+               'tinytapeout-demo', 
+                 [Symbol('path'), '/20adca1d-43a1-4784-9682-8b7dd1c7d330', 
+                 [Symbol('reference'), 'C4'], [Symbol('unit'), 1]]]]
+        would have such that
+         instances.children[0].value == 'tinytapeout'
+         
+        Children are also accessible as attributes.  
+        If a there are (possibly) many children of the same type, this attribute will
+        be list-like:
+         instances.project[0].path.reference.value == 'C4'
+         
+        otherwise they are just objects.  Finally, some children that would be 
+        simple lists are replaced by specialized containers in higher levels 
+        to allow for things like named-access
+        
+          schematic.symbol.C4.property.description.value
+         
+        rather than only having
+        
+          schematic.symbol[idx].property[3].value
+        
+        though that will still work.
+        
+        
+        This class is pretty generic and agnostic about the contents of the
+        sexpressions except that it knows about 'at' (an element with a list
+        of coordinates and rotation), and will automagically provide
+            move() and
+            translation() 
+        methods on elements that have these as children.
+        
+        @note: when you have a parsed value in a REPL use tab completion 
+        to discover what's available to you: schematic.symbol.<TAB><TAB> is
+        very nice.
+        
+    '''
     
     @classmethod 
     def toString(cls, val):
         if isinstance(val, sexpdata.Symbol):
             return str(val.value())
         return str(val)
-    
+       
+    def __init__(self, sourceTree, tree, base_coords, parent=None):
+        super().__init__(sourceTree)
+        self._parent_obj = parent
+        self._entity_name = None 
+        self._base_coords = base_coords 
+        self._deleted = False
+        self._tree = tree 
+        self._value = None
+        self.children = []
+        
+        self._added_children_names = []
+        
+        self._parseTree(tree)
+        
+        if hasattr(self, 'at'):
+            self.move = self._move_method
+            self.translation = self._translate_method # translate was taken
+        
+        
+                     
+    @property 
+    def value(self):
+        '''
+            the "value" tries to be the thing represented 
+            by this entry    
+        
+        '''
+        if self._value is None and len(self.children):
+            return self.children 
+            
+        as_bool = self._as_boolean(self._value) 
+        if as_bool is not None:
+            return as_bool 
+            
+        return self._value 
+        
+    @value.setter 
+    def value(self, setTo):
+        '''
+            Set values on the .value attribute.
+            
+            E.g. 
+            sch.symbol.C4.dnp.value = True 
+        
+        '''
+        if self._is_bool_symbol(self._value):
+            if not isinstance(setTo, str):
+                if setTo:
+                    setTo = 'yes'
+                else:
+                    setTo = 'no'
+            self._value = sexpdata.Symbol(setTo)
+        else:
+            if isinstance(self._value, sexpdata.Symbol):
+                self._value = sexpdata.Symbol(setTo)
+            else:
+                self._value = setTo
+            
+        if self.sourceTree is not None and len(self.sourceTree) >= self._base_coords[0]:
+            c = self.sourceTree
+            for i in range(len(self._base_coords)):
+                c = c[self._base_coords[i]]
+                
+            if isinstance(c, list) and len(c) > 1:
+                if isinstance(self._value, list):
+                    c[1:] = self._value 
+                    #print(f"Setting values as list on {c}")
+                else:
+                    c[1] = self._value
+                    #print(f"Setting values as list on idx 1 of {c}")
+                    
+                if len(self.children) and type(setTo) == type(self.children[0]):
+                    self.children[0] = self._value
+            else:
+                print(c)
+                raise KeyError(f'dunno how to handle setting {c}')
+   
     def clone(self):
+        '''
+            Constructing something complex like a component ("symbol"), 
+            or even a property would be a major pain.
+            
+            Instead, find something you like and clone it.
+            
+              newCap = sch.symbol.C4.clone()
+            This is a deep copy, that is inserted in the tree at the same
+            level.
+            
+            So 
+              newProp = sch.symbol.R10.property.description.clone()
+              
+            Creates a new property *on* symbol "R10"
+            
+        '''
         rawclone = copy.deepcopy(self.raw)
         rawpar = self.raw_parent
         idx = len(rawpar)
@@ -57,10 +203,57 @@ class ParsedValue(AccessesTree):
         
         coords = copy.deepcopy(self._base_coords)
         coords[-1] = idx 
+        clonedObj = ParsedValue(self.sourceTree, rawclone, coords, self.parent)
+        if self.parent is not None:
+            if hasattr('children', self.parent):
+                self.parent.children.append(clonedObj)
+            else:
+                log.error(f'Object parent exists but has no children?? {self.parent}')
+        return clonedObj
         
-        return ParsedValue(self.sourceTree, rawclone, coords)
         
         
+    def delete(self):
+        
+        self._deleted = True
+        
+        self._deleteOnTree(self._base_coords)
+        
+        for c in self.children:
+            if hasattr(c, 'delete'):
+                c.delete()
+                
+    @property 
+    def entity_type(self):
+        return self._entity_name
+    
+    @property 
+    def parent(self):
+        return self._parent_obj
+                
+        
+    def getElementsByEntityType(self, tp:str):
+        return self._crawlForElementsByType(tp, self.children)
+        
+    @property 
+    def raw(self):
+        c = self.sourceTree 
+        for coord in self._base_coords:
+            c = c[coord]
+            
+        return c
+    
+    
+    @property 
+    def raw_parent(self):
+        c = self.sourceTree 
+        for i in range(len(self._base_coords) - 1):
+            c = c[self._base_coords[i]] 
+            
+        return c 
+    
+    
+    
     def _move_method(self, xcoord:float, ycoord:float, rotation:int=None):
         '''
             update this element's "at" value to place it at xcoord, ycoord.
@@ -89,26 +282,7 @@ class ParsedValue(AccessesTree):
         for child in self.children:
             if hasattr(child, 'translation'):
                 child.translation(by_x, by_y)
-        
-    def __init__(self, sourceTree, tree, base_coords):
-        super().__init__(sourceTree)
-        self._entity_name = None 
-        self._base_coords = base_coords 
-        self._deleted = False
-        self._tree = tree 
-        self._value = None
-        self.children = []
-        
-        self._added_children_names = []
-        
-        self._parseTree(tree)
-        
-        if hasattr(self, 'at'):
-            self.move = self._move_method
-            self.translation = self._translate_method # translate was taken
-        
-        
-        
+         
     def _parseTree(self, tree):
         if not isinstance(tree, list):
             self._value = tree 
@@ -151,7 +325,7 @@ class ParsedValue(AccessesTree):
                     childnameCounts[entry_name] = 1
                 else:
                     childnameCounts[entry_name] += 1
-                parsed = ParsedValue(self.sourceTree, entry, child_coord)
+                parsed = ParsedValue(self.sourceTree, entry, child_coord, self)
                 
                 log.debug(f"Appended entry at {child_coord}: {parsed}")
                 children.append(parsed)
@@ -195,39 +369,14 @@ class ParsedValue(AccessesTree):
                     else:
                         self._added_children_names.append(centry_name)
                     setattr(self, centry_name, c)
-    
-    def delete(self):
-        
-        self._deleted = True
-        
-        self._deleteOnTree(self._base_coords)
-        
-        for c in self.children:
-            if hasattr(c, 'delete'):
-                c.delete()
-                
-        
-    @property 
-    def raw(self):
-        c = self.sourceTree 
-        for coord in self._base_coords:
-            c = c[coord]
-            
-        return c
+      
     
     
-    @property 
-    def raw_parent(self):
-        c = self.sourceTree 
-        for i in range(len(self._base_coords) - 1):
-            c = c[self._base_coords[i]] 
-            
-        return c 
     
-    @property 
-    def entity_type(self):
-        return self._entity_name
-                
+    
+    
+    
+    
     def _crawlForElementsByType(self, tp:str, elements:list):
         retVal = []
         for el in elements:
@@ -241,10 +390,7 @@ class ParsedValue(AccessesTree):
         return retVal
             
             
-    
-    def getElementsByEntityType(self, tp:str):
-        return self._crawlForElementsByType(tp, self.children)
-                
+            
     def _is_bool_symbol(self, v):
         
         if not isinstance(self._value, sexpdata.Symbol):
@@ -263,52 +409,7 @@ class ParsedValue(AccessesTree):
             return True
         
         return False
-        
-    @property 
-    def value(self):
-        if self._value is None and len(self.children):
-            return self.children 
-            
-        as_bool = self._as_boolean(self._value) 
-        if as_bool is not None:
-            return as_bool 
-            
-        return self._value 
-        
-    @value.setter 
-    def value(self, setTo):
-        if self._is_bool_symbol(self._value):
-            if not isinstance(setTo, str):
-                if setTo:
-                    setTo = 'yes'
-                else:
-                    setTo = 'no'
-            self._value = sexpdata.Symbol(setTo)
-        else:
-            if isinstance(self._value, sexpdata.Symbol):
-                self._value = sexpdata.Symbol(setTo)
-            else:
-                self._value = setTo
-            
-        if self.sourceTree is not None and len(self.sourceTree) >= self._base_coords[0]:
-            c = self.sourceTree
-            for i in range(len(self._base_coords)):
-                c = c[self._base_coords[i]]
-                
-            if isinstance(c, list) and len(c) > 1:
-                if isinstance(self._value, list):
-                    c[1:] = self._value 
-                    #print(f"Setting values as list on {c}")
-                else:
-                    c[1] = self._value
-                    #print(f"Setting values as list on idx 1 of {c}")
-                    
-                if len(self.children) and type(setTo) == type(self.children[0]):
-                    self.children[0] = self._value
-            else:
-                print(c)
-                raise KeyError(f'dunno how to handle setting {c}')
-            
+               
             
     def __len__(self):
         return len(self.children)
@@ -318,6 +419,9 @@ class ParsedValue(AccessesTree):
     
     def __str__(self):
         bstring = self.__repr__()
+        if len(bstring) > 24:
+            bstring = f'{bstring[:24]}...'
+            
         childrens = []
         for cname in self._added_children_names:
             c = getattr(self, cname)
@@ -381,23 +485,59 @@ class ArbitraryNamedParsedValueWrapper(ParsedValueWrapper):
         coords = []
         for i in pv._base_coords:
             coords.append(i)                        
-        coords.append(2)
-        self._write_coords = coords
+        #coords.append(2)
+        self._name_coords = copy.deepcopy(coords)
+        self._val_coords = coords
+        self._name_coords.append(1)
+        self._val_coords.append(2)
+        
         
         name = pv.children[0].lower()
         name = re.sub(r'[^\w\d_]', '_', name)
-        self.name = name
-        
+        self._name = name
+    
+    
+    @property 
+    def name(self):
+        '''
+            the name of this nameable element... stuff like symbol properties, 
+            i.e. the Reference and Datasheet in the part details, can be 
+            augmented with user-named element, say "MPN"
+            
+            This provides a way to get and set that name (thereby influencing 
+            the containing elements available attributes)
+            
+            @see: property.PropertyString for contrete examples
+        '''
+        return self._name 
+    
+    @name.setter 
+    def name(self, setTo:str):
+        oldName = self._name
+        self.children[0] = setTo
+        name = re.sub(r'[^\w\d_]', '_', setTo)
+        self._setOnTree(self._name_coords, setTo)
+        self.updateParentContainer(oldName, name)
+        self._name = name
     @property 
     def value(self): 
+        '''
+            the value of this nameable element... stuff like symbol properties, 
+            i.e. the Reference and Datasheet in the part details, have a definite 
+            value, as well as other children.
+            @see: property.PropertyString for contrete examples
+        '''
         return self.children[1]
     
     @value.setter
     def value(self, x):
         self.children[1] = x
-        self._setOnTree(self._write_coords, x)
+        self._setOnTree(self._val_coords, x)
         
-        
+    
+    def updateParentContainer(self, oldName:str, newName:str):
+        pass 
+    
     def __repr__(self):
         return f"<NamedValue {self.name} = '{self.value}'>"
     
