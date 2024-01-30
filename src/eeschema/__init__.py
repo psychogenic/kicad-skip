@@ -1,0 +1,1 @@
+from eeschema.schematic.schematic import Schematic
