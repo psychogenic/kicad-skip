@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "eeschema_psychogenic"
+version = "0.1.0"
+authors = [
+  { name="Pat Deegan" },
+]
+description = "A friendly way to parse and manipulate kicad 7+ schematic files"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/psychogenic/psychogenic-eeschema"
+Issues = "https://github.com/psychogenic/psychogenic-eeschema/issues"
