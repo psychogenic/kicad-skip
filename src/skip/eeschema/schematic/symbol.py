@@ -7,9 +7,11 @@ Created on Jan 29, 2024
 import re
 from skip.property import ElementWithPropertiesWrapper
 from skip.collection import NamedElementCollection
-from skip.sexp.parser import ParsedValue, ParsedValueWrapper
+from skip.sexp.parser import ParsedValue
 from skip.at_location import AtValue
 from skip.eeschema.pin import Pin
+
+
 class SymbolCollection(NamedElementCollection):
     '''
         The symbols of a schematic are all contained in this.
@@ -33,7 +35,7 @@ class SymbolCollection(NamedElementCollection):
         Also some utility methods, below
 
     '''
-    UnitToName = ['N/A', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
+    UnitToName = ['N/A', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K']
     def __init__(self, elements:list):
         super().__init__(elements, 
                          lambda s: s.property.Reference.value if s.unit.value == 1 else f'{s.property.Reference.value}_{self.UnitToName[s.unit.value]}')
@@ -98,7 +100,7 @@ class SymbolBase(ElementWithPropertiesWrapper):
     def __repr__(self):
         v = self.property.Reference.value
         baseRef = v
-        if hasattr(self, 'instances'):
+        if 'instances' in self:
             for proj in self.instances.getElementsByEntityType('project'):
                 if proj.path.reference.value != baseRef:
                     v += f',{proj.value}:{proj.path.reference.value}'
@@ -161,6 +163,7 @@ class Symbol(SymbolBase):
         return all_wires
     
     
+    
     @property 
     def attached_labels(self):
         all_labels = []
@@ -180,6 +183,18 @@ class Symbol(SymbolBase):
                     all_labels.append(lbl)
         
         return all_labels
+    
+    
+    @property 
+    def attached_symbols(self):
+        all_symbols = []
+        for w in self.attached_wires:
+            for sym in w.list_connected_symbols(True):
+                if sym != self and sym not in all_symbols:
+                    all_symbols.append(sym)
+                    
+        return all_symbols
+        
         
                 
     
@@ -197,6 +212,11 @@ class Symbol(SymbolBase):
                     pass 
         
         return None 
+    
+    def __repr__(self):
+        if self.unit is not None and self.unit.value != 1:
+            return f'<symbol {self.property.Reference.value} (unit {SymbolCollection.UnitToName[self.unit.value]})>'
+        return super().__repr__()
     
 class SymbolPinCollection(NamedElementCollection):
     pass
@@ -220,8 +240,26 @@ class SymbolPin(Pin):
     def location(self):
         par_at = AtValue(self.parent.at.value)
         
-        rel_at = AtValue(self._lib_sym_pin.at.value)
-        manip_at = AtValue(self._lib_sym_pin.at.value)
+        
+        rel_at_raw = self._lib_sym_pin.at.value
+        if hasattr(self.parent, 'mirror'):
+            mval = self.parent.mirror.value 
+            
+            if hasattr(mval, 'value'):
+                mval = mval.value()
+            rot = rel_at_raw[2] 
+            if mval == 'y': # around y
+                rel_at_raw[0] = -1 * rel_at_raw[0]
+                if rot % 180 == 0:
+                    rel_at_raw[2] = (rot + 180) % 360
+            elif mval == 'x':
+                rel_at_raw[1] = -1 * rel_at_raw[1]
+                if rot % 90 == 0:
+                    rel_at_raw[2] = (rot + 180) % 360
+                    
+                
+        rel_at = AtValue(rel_at_raw)
+        manip_at = AtValue(rel_at_raw)
         manip_at.rotation = 0  # whatever the pin is set to, it's in the part "0 state"
         
         # this ain't pretty, but its simple
@@ -261,6 +299,16 @@ class SymbolPin(Pin):
                     all_labels.append(lbl)
                     
         return all_labels
+    
+    
+    @property 
+    def attached_symbols(self):
+        all_syms = []
+        for w in self.attached_wires:
+            all_syms.extend(w.list_connected_symbols(recursive_crawl=True))
+            
+        return all_syms
+    
         
     def __str__(self):
         return self.__repr__()

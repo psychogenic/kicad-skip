@@ -17,7 +17,7 @@ class Pin(ParsedValueWrapper):
     
     @property 
     def location(self):
-        return self.at
+        return AtValue(self.at.value)
 
     def __repr__(self):
         return f'<Pin "{self.name}">'

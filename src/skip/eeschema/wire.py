@@ -42,10 +42,47 @@ class WireWrapper(ParsedValueWrapper):
         
         return round(self._wire_mag, 4)
     
+    def list_connected_symbols(self, recursive_crawl:bool = False):
+        
+        all_syms = []
+        if recursive_crawl:
+            all_wires = self.crawl_connected_wires()
+            for w in all_wires:
+                for sym in w.list_connected_symbols(False):
+                    if sym not in all_syms:
+                        all_syms.append(sym)
+        else:
+            startpoint = self.start.value 
+            endpoint = self.end.value 
+            for sym in self.parent.symbol:
+                if sym is None or 'pin' not in sym:
+                    continue
+                addIt = None 
+                for pin in sym.pin:
+                    if addIt is not None:
+                        continue 
+                    try:
+                        pinloc = pin.location 
+                    except:
+                        continue
+                    if pinloc.x == startpoint[0] and pinloc.y == startpoint[1]:
+                        addIt = sym 
+                    elif pinloc.x == endpoint[0] and pinloc.y == endpoint[1]:
+                        addIt = sym 
+                
+                if addIt is not None and addIt not in all_syms:
+                    all_syms.append(addIt)
+            
+        return all_syms
+                        
+                        
+                    
+                
+    
     def list_labels(self, recursive_crawl:bool=False):
         all_labels = []
         if recursive_crawl:
-            all_wires = self.list_all_connected()
+            all_wires = self.crawl_connected_wires()
             for w in all_wires:
                 for lbl in w.list_labels(False):
                     if lbl not in all_labels:
@@ -64,7 +101,7 @@ class WireWrapper(ParsedValueWrapper):
         all_labels = []
         
         if recursive_crawl:
-            all_wires = self.list_all_connected()
+            all_wires = self.crawl_connected_wires()
             for w in all_wires:
                 for lbl in w.list_global_labels(False):
                     if lbl not in all_labels:
@@ -78,7 +115,7 @@ class WireWrapper(ParsedValueWrapper):
         
         return all_labels
     
-    def list_all_connected(self, into_list:list = None):
+    def crawl_connected_wires(self, into_list:list = None):
         
         if into_list is None:
             into_list = []
@@ -88,7 +125,7 @@ class WireWrapper(ParsedValueWrapper):
                 if w not in into_list:
                     into_list.append(w)
                     if w != self:
-                        w.list_all_connected(into_list)
+                        w.crawl_connected_wires(into_list)
                         
         return into_list
             

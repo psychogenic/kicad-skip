@@ -126,7 +126,7 @@ def add_mpn_to_all_symbols(sch:Schematic, default_value:str='N/A'):
     count = 0
     for sym in unsets:
         if 'MPN' not in sym.property:
-            mpn = sym.property.Description.clone()
+            mpn = sym.property.Reference.clone()
             mpn.name = 'MPN'
             mpn.value = default_value 
         else:
@@ -183,7 +183,10 @@ if __name__ == '__main__':
         print("No sim either")
         for s in sch.symbol:
             if s.dnp.value:
-                s.exclude_from_sim.value = True 
+                if 'exclude_from_sim' in s:
+                    s.exclude_from_sim.value = True 
+                else:
+                    print(f"symbol {s.property.Reference.value} does not have an 'exclude_from_sim' prop")
         
         
         print("Changing all 10k Rs to 13k333")

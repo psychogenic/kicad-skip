@@ -234,7 +234,12 @@ class ParsedValue(AccessesTree):
             if hasattr(self.parent, 'children'):
                 self.parent.children.append(clonedObj)
             else:
-                log.error(f'Object parent exists but has no children?? {self.parent}')
+                
+                log.info(f'Object parent exists but has no children {self.parent}')
+                if hasattr(self.parent, self.entity_type):
+                    ent_container = getattr(self.parent, self.entity_type)
+                    if hasattr(ent_container, 'append'):
+                        ent_container.append(clonedObj)
         return clonedObj
         
         
@@ -507,6 +512,9 @@ class ParsedValueWrapper:
         self._pv = v
         
 
+    def __contains__(self, name:str):
+        return hasattr(self._pv, name)
+    
     def __getattr__(self, name:str):
         if not hasattr(self._pv, name):
             #raise AttributeError(f"no '{name}' in {self._pv}")

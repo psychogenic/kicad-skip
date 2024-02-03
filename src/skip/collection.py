@@ -32,6 +32,10 @@ class ElementCollection:
     def __init__(self, elements:list):
         self._elements = elements 
         
+        
+    def append(self, element):
+        self._elements.append(element)
+        
     def _coordinates_for(self, el):
         coords = None
         if hasattr(el, 'at'):
@@ -181,9 +185,10 @@ class NamedElementCollection(ElementCollection):
                 return self._named[kv]
         # named element are dynamic, so we 
         # can't know if the key is present -- return None if not
-        #raise AttributeError(f"Unknown element {key}")
+        #
         log.debug(f'{key} not found... Available {list(self._named.keys())}')
-        return None
+        # return None
+        raise AttributeError(f"Unknown element {key}")
         
     def __getitem__(self, indexOrKey):
         if indexOrKey in self._named:
