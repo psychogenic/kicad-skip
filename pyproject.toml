@@ -3,12 +3,12 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "eeschema_psychogenic"
-version = "0.1.0"
+name = "kicad-skip_psychogenic"
+version = "0.1.2"
 authors = [
   { name="Pat Deegan" },
 ]
-description = "A friendly way to parse and manipulate kicad 7+ schematic files"
+description = "A friendly way to skip the drudgery and manipulate kicad 7+ s-expression schematic, netlist and PCB files"
 readme = "README.md"
 requires-python = ">=3.8"
 classifiers = [
@@ -18,5 +18,5 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/psychogenic/psychogenic-eeschema"
-Issues = "https://github.com/psychogenic/psychogenic-eeschema/issues"
+Homepage = "https://github.com/psychogenic/kicad-skip"
+Issues = "https://github.com/psychogenic/kicad-skip/issues"
