@@ -509,7 +509,9 @@ class ParsedValueWrapper:
 
     def __getattr__(self, name:str):
         if not hasattr(self._pv, name):
-            raise AttributeError(f"no '{name}' in {self._pv}")
+            #raise AttributeError(f"no '{name}' in {self._pv}")
+            log.debug(f'no "{name}" found')
+            return None
         return getattr(self._pv, name)
     
     def __dir__(self):

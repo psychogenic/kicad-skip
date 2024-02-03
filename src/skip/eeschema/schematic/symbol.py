@@ -33,9 +33,19 @@ class SymbolContainer(NamedElementContainer):
         Also some utility methods, below
 
     '''
+    UnitToName = ['N/A', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
     def __init__(self, elements:list):
-        super().__init__(elements, lambda s: s.property.Reference.value)
+        super().__init__(elements, 
+                         lambda s: s.property.Reference.value if s.unit.value == 1 else f'{s.property.Reference.value}_{self.UnitToName[s.unit.value]}')
         
+        self._multi_unit_elements = dict()
+        for el in elements:
+            if el.unit.value > 1:
+                self._multi_unit_elements[el.property.Reference.value] = True
+                
+        for multis in self._multi_unit_elements.keys():
+            self.elementRename(multis, f'{multis}_{self.UnitToName[1]}')
+            
         
         
     def reference_startswith(self, prefix:str):
@@ -74,7 +84,8 @@ class SymbolContainer(NamedElementContainer):
     def value_matches(self, regex:str):
         return list(filter(lambda s: re.match(regex, s.property.Value.value), self))
 
-
+    def multiple_units_for_reference(self, reference:str):
+        return reference in self._multi_unit_elements
 
 
 class SymbolBase(ElementWithPropertiesWrapper):
@@ -114,21 +125,28 @@ class Symbol(SymbolBase):
     
     @property 
     def pin(self):
-        if self._sympins_cont_cache is None:
-            lib_pins_map = dict()
-            for lib_pin in self.lib_symbol.pin:
-                lib_pins_map[lib_pin.number.value] = lib_pin 
+        if self._sympins_cont_cache is not None:
+            return self._sympins_cont_cache
+        lib_pins_map = dict()
+        
+        if self.parent.symbol.multiple_units_for_reference(self.property.Reference.value):
+            lib_sym_pins = self.lib_symbol.symbol[self.unit.value - 1].pin
+        else:
+            lib_sym_pins = self.lib_symbol.pin
+        
+        for lib_pin in lib_sym_pins:
+            lib_pins_map[lib_pin.number.value] = lib_pin 
+        
+        pseudoPinsList = []
+        for sym_pin in self.wrapped_parsed_value.pin:
+            pin_num = sym_pin.value 
             
-            pseudoPinsList = []
-            for sym_pin in self.wrapped_parsed_value.pin:
-                pin_num = sym_pin.value 
-                
-                matchingLibPin = None
-                if pin_num in lib_pins_map:
-                    matchingLibPin = lib_pins_map[pin_num]
+            matchingLibPin = None
+            if pin_num in lib_pins_map:
+                matchingLibPin = lib_pins_map[pin_num]
                 pseudoPinsList.append(SymbolPin(sym_pin, matchingLibPin))
 
-            self._sympins_cont_cache = SymbolPinContainer(pseudoPinsList, lambda sp: sp.number if sp.name == '~' else sp.name)
+        self._sympins_cont_cache = SymbolPinContainer(pseudoPinsList, lambda sp: sp.number if sp.name == '~' else sp.name)
             
         return self._sympins_cont_cache
             
@@ -141,12 +159,38 @@ class Symbol(SymbolBase):
             all_wires.extend(pwires)
         
         return all_wires
+    
+    
+    @property 
+    def attached_labels(self):
+        all_labels = []
+        for p in self.pin:
+            for lbl in p.attached_labels:
+                if lbl not in all_labels:
+                    all_labels.append(lbl)
+        
+        return all_labels
+    
+    @property 
+    def attached_global_labels(self):
+        all_labels = []
+        for p in self.pin:
+            for lbl in p.attached_global_labels:
+                if lbl not in all_labels:
+                    all_labels.append(lbl)
+        
+        return all_labels
+        
                 
     
     @property 
     def lib_symbol(self):
         if hasattr(self, 'lib_id') and len(self.lib_id.value):
             if hasattr(self.parent, 'lib_symbols'):
+                
+                #if self.unit.value > 1:
+                #    return self.parent.lib_symbols[self.lib_id.value].symbol[self.unit.value - 1]
+                
                 try:
                     return self.parent.lib_symbols[self.lib_id.value]
                 except:

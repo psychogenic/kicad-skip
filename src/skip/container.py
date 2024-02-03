@@ -126,7 +126,7 @@ class NamedElementContainer(ElementContainer):
     NamePrefixEliminatorRegex = re.compile(r'^[^\w\d]+')
     NameStartsWithDigitRegex = re.compile(r'^\d')
     NameCleanerRegex = re.compile(r'[^\w\d_]+')
-    NameMetaEliminatorRegex = re.compile(r'[}{)(]')
+    NameMetaEliminatorRegex = re.compile(r'[}{)(\]\[]')
     def __init__(self, elements:list, namefetcher):
         super().__init__(elements)
         self._named = dict()
@@ -136,12 +136,16 @@ class NamedElementContainer(ElementContainer):
             self._named[name] = el
     
     def _cleanse_key(self, key:str):
-        if key is not None and len(key):
-            key = key.replace('~', 'n')
-            key = self.NamePrefixEliminatorRegex.sub('', key)
-            key = self.NameMetaEliminatorRegex.sub('', key)
-            if self.NameStartsWithDigitRegex.match(key):
-                key = f'n{key}'
+        if key is None or not len(key):
+            log.warn(f"Passed key {key} -- can't parsy")
+            return '_deadbeef'
+        
+        key = key.replace('~', 'n')
+        key = self.NamePrefixEliminatorRegex.sub('', key)
+        key = self.NameMetaEliminatorRegex.sub('', key)
+        if self.NameStartsWithDigitRegex.match(key):
+            key = f'n{key}'
+        
         return self.NameCleanerRegex.sub('_', key)
     
     
@@ -150,6 +154,14 @@ class NamedElementContainer(ElementContainer):
         
     def elementAdd(self, elKey:str, element):
         self._named[self._cleanse_key(elKey)] = element 
+        
+    def elementRename(self, origKey:str, newKey:str):
+        cleaned = self._cleanse_key(origKey)
+        if cleaned in self._named:
+            v = self._named[cleaned]
+            del self._named[cleaned]
+            self._named[self._cleanse_key(newKey)] = v 
+            
         
     def __contains__(self, key:str):
         if key in self._named:

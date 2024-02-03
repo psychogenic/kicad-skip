@@ -5,6 +5,7 @@ Created on Feb 2, 2024
 @copyright: Copyright (C) 2024 Pat Deegan, https://psychogenic.com
 '''
 
+from skip.container import NamedElementContainer
 from skip.sexp.parser import ParsedValue, ParsedValueWrapper
 from skip.eeschema.schematic.symbol import SymbolBase
 from skip.eeschema.pin import Pin
@@ -69,17 +70,42 @@ class LibSymbolPin(Pin):
     def __repr__(self):
         return f"<Pin '{self.name.value}' ({self.number.value}) >"
 
+
+class LibSymbolElementWithPins(NamedElementContainer):
+    def __init__(self, elements:list):
+        super().__init__(elements, lambda lspin: lspin.number.value if lspin.name.value == '~' else lspin.name.value)
+        
+
 class LibSymbol(SymbolBase):
     def __init__(self, pv:ParsedValue):
         super().__init__(pv)
         self._pins_cache = None 
+        self._symbol_units = []
+        
+        all_pins = []
+        subsyms = pv.symbol
+        if not isinstance(pv.symbol, list):
+            subsyms = [pv.symbol]
+        for es in subsyms:
+            espins = []
+            if hasattr(es, 'pin'):
+                for pn in es.getElementsByEntityType('pin'):
+                    pobj = LibSymbolPin(pn)
+                    all_pins.append(pobj)
+                    espins.append(pobj)
+                    
+                # replace it
+                es.pin = LibSymbolElementWithPins(espins)
+            self._symbol_units.append(es)
+            
+        self._all_pins = LibSymbolElementWithPins(all_pins)
+            
+        
+    @property 
+    def symbol(self):
+        return self._symbol_units
         
     @property
     def pin(self):
-        if self._pins_cache is None:
-            self._pins_cache = []
-            for pn in self.getElementsByEntityType('pin'):
-                self._pins_cache.append(LibSymbolPin(pn))
-        
-        return self._pins_cache
+        return self._all_pins
         
