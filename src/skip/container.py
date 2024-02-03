@@ -9,6 +9,9 @@ Created on Jan 29, 2024
 
 import re
 import math 
+import logging 
+
+log = logging.getLogger(__name__)
 class ElementContainer:
     '''
         A base class for element containers.
@@ -80,7 +83,8 @@ class ElementContainer:
                 continue
             
             if self._distance_between(target_coords, coords) <= radius:
-                retvals.append(el)
+                if el not in retvals:
+                    retvals.append(el)
                 
         return retvals
             
@@ -119,19 +123,26 @@ class NamedElementContainer(ElementContainer):
         @see: property.PropertyContainer for real examples.
         
     '''
-    NameCleanerRegex = re.compile(r'[^\w\d_]')
+    NamePrefixEliminatorRegex = re.compile(r'^[^\w\d]+')
+    NameStartsWithDigitRegex = re.compile(r'^\d')
+    NameCleanerRegex = re.compile(r'[^\w\d_]+')
+    NameMetaEliminatorRegex = re.compile(r'[}{)(]')
     def __init__(self, elements:list, namefetcher):
         super().__init__(elements)
         self._named = dict()
         for el in elements:
             name = namefetcher(el)
-            
-            name = self.NameCleanerRegex.sub('_', name)
+            name = self._cleanse_key(name)
             self._named[name] = el
-            
     
     def _cleanse_key(self, key:str):
-        return  self.NameCleanerRegex.sub('_', key)
+        if key is not None and len(key):
+            key = key.replace('~', 'n')
+            key = self.NamePrefixEliminatorRegex.sub('', key)
+            key = self.NameMetaEliminatorRegex.sub('', key)
+            if self.NameStartsWithDigitRegex.match(key):
+                key = f'n{key}'
+        return self.NameCleanerRegex.sub('_', key)
     
     
     def elementRemove(self, elKey:str):
@@ -141,14 +152,25 @@ class NamedElementContainer(ElementContainer):
         self._named[self._cleanse_key(elKey)] = element 
         
     def __contains__(self, key:str):
-        return key in self._named
+        if key in self._named:
+            return True
+        log.debug(f'No {key} found here')
+        log.debug(f'Available {list(self._named.keys())}')
+        return False
     
     def __getattr__(self, key:str):
         if key in self._named:
             return self._named[key]
+        if hasattr(key, 'value'):
+            # a concession to anyone naturally passing some 
+            # parsedValue object to 
+            kv = key.value
+            if kv in self._named:
+                return self._named[kv]
         # named element are dynamic, so we 
         # can't know if the key is present -- return None if not
         #raise AttributeError(f"Unknown element {key}")
+        log.debug(f'{key} not found... Available {list(self._named.keys())}')
         return None
         
     def __getitem__(self, indexOrKey):

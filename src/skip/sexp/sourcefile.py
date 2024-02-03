@@ -203,9 +203,11 @@ class SourceFile:
                 
                 if dedicatedContainer is None:
                     # nope, just have a list
+                    log.debug(f'No deditaced container for {ent_type}, using default for {len(entities)}')
                     setattr(self, ent_type, ElementContainer(entities))
                 else:
                     # yep, stick a container there
+                    log.debug(f'Have a dedicated container {dedicatedContainer} for {ent_type}--sending {len(entities)} over')
                     setattr(self, ent_type, dedicatedContainer(entities))
     
     def write(self, fpath:str):

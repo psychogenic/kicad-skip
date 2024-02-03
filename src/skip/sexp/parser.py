@@ -480,7 +480,7 @@ class ParsedValue(AccessesTree):
         
         v = self.value 
         
-        if hasattr(self, 'property') and hasattr(self.property, 'reference'):
+        if hasattr(self, 'property') and hasattr(self.property, 'Reference'):
             v = self.property.Reference.value 
         else:
             if v is None:
