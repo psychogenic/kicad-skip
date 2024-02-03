@@ -5,10 +5,6 @@ Created on Feb 2, 2024
 @copyright: Copyright (C) 2024 Pat Deegan, https://psychogenic.com
 '''
 
-
-import re
-from skip.property import ElementWithPropertiesWrapper
-from skip.container import NamedElementContainer
 from skip.sexp.parser import ParsedValue, ParsedValueWrapper
 from skip.eeschema.schematic.symbol import SymbolBase
 from skip.eeschema.pin import Pin

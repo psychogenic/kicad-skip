@@ -128,7 +128,7 @@ class Symbol(SymbolBase):
                     matchingLibPin = lib_pins_map[pin_num]
                 pseudoPinsList.append(SymbolPin(sym_pin, matchingLibPin))
 
-            self._sympins_cont_cache = SymbolPinContainer(pseudoPinsList, lambda sp: sp.name)
+            self._sympins_cont_cache = SymbolPinContainer(pseudoPinsList, lambda sp: sp.number if sp.name == '~' else sp.name)
             
         return self._sympins_cont_cache
             
@@ -197,7 +197,29 @@ class SymbolPin(Pin):
             return []
         
         return self.parent.parent.wire.all_at(loc.x, loc.y)
+    
+    @property 
+    def attached_labels(self):
+        all_labels = []
+        for w in self.attached_wires:
+            for lbl in w.list_labels(recursive_crawl=True):
+                if lbl not in all_labels:
+                    all_labels.append(lbl)
+                    
+        return all_labels
+    
+    @property 
+    def attached_global_labels(self):
+        all_labels = []
+        for w in self.attached_wires:
+            for lbl in w.list_global_labels(recursive_crawl=True):
+                if lbl not in all_labels:
+                    all_labels.append(lbl)
+                    
+        return all_labels
         
+    def __str__(self):
+        return self.__repr__()
     def __repr__(self):
         return f'<SymbolPin {self.number} "{self.name}">'
         
