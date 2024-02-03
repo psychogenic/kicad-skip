@@ -6,11 +6,11 @@ Created on Jan 29, 2024
 '''
 import re
 from skip.property import ElementWithPropertiesWrapper
-from skip.container import NamedElementContainer
+from skip.collection import NamedElementCollection
 from skip.sexp.parser import ParsedValue, ParsedValueWrapper
 from skip.at_location import AtValue
 from skip.eeschema.pin import Pin
-class SymbolContainer(NamedElementContainer):
+class SymbolCollection(NamedElementCollection):
     '''
         The symbols of a schematic are all contained in this.
         
@@ -146,7 +146,7 @@ class Symbol(SymbolBase):
                 matchingLibPin = lib_pins_map[pin_num]
                 pseudoPinsList.append(SymbolPin(sym_pin, matchingLibPin))
 
-        self._sympins_cont_cache = SymbolPinContainer(pseudoPinsList, lambda sp: sp.number if sp.name == '~' else sp.name)
+        self._sympins_cont_cache = SymbolPinCollection(pseudoPinsList, lambda sp: sp.number if sp.name == '~' else sp.name)
             
         return self._sympins_cont_cache
             
@@ -198,7 +198,7 @@ class Symbol(SymbolBase):
         
         return None 
     
-class SymbolPinContainer(NamedElementContainer):
+class SymbolPinCollection(NamedElementCollection):
     pass
 
 class SymbolPin(Pin):

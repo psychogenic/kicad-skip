@@ -11,10 +11,10 @@ Created on Jan 29, 2024
 @copyright: Copyright (C) 2024 Pat Deegan, https://psychogenic.com
 '''
 from skip.sexp.sourcefile import SourceFile
-from skip.eeschema.schematic.symbol import SymbolContainer, Symbol
+from skip.eeschema.schematic.symbol import SymbolCollection, Symbol
 from skip.eeschema.sheet.sheet import SheetWrapper
 from skip.eeschema.lib_symbol import LibSymbolsListWrapper
-from skip.eeschema.wire import WireContainer, WireWrapper
+from skip.eeschema.wire import WireCollection, WireWrapper
 import logging 
 log = logging.getLogger(__name__)
 
@@ -51,9 +51,9 @@ class Schematic(SourceFile):
         Each attribute will either be:
           * an object 
           * a basic list of objects
-          * a container of objects
+          * a collection of objects
         
-        Dedicated containers are used in some instances.  These can act just like lists
+        Dedicated collections are used in some instances.  These can act just like lists
         
         for component in sch.symbol:
             print(f'Setting datasheet and DNP on {component.property.Reference.value}')
@@ -86,14 +86,14 @@ class Schematic(SourceFile):
     
     
     
-    def dedicated_container_type_for(self, entity_type:str):
-        dedicatedContainer = {
+    def dedicated_collection_type_for(self, entity_type:str):
+        dedicatedCollection = {
         
-            'symbol': SymbolContainer,
-            'wire': WireContainer,
+            'symbol': SymbolCollection,
+            'wire': WireCollection,
         }
-        if entity_type in dedicatedContainer:
-            return dedicatedContainer[entity_type]
+        if entity_type in dedicatedCollection:
+            return dedicatedCollection[entity_type]
         return None 
     def dedicated_wrapper_type_for(self, entity_type:str):
         

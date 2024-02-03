@@ -6,17 +6,17 @@ Created on Feb 1, 2024
 '''
 
 import re
-from skip.container import NamedElementContainer
+from skip.collection import NamedElementCollection
 from skip.sexp.parser import ParsedValue, ParsedValueWrapper
 
-class LayerContainer(NamedElementContainer):
+class LayerCollection(NamedElementCollection):
     '''
        
 
     '''
     LayerNameCleanerRegex = re.compile(r'[^\w\d_]')
     def __init__(self, elements:list):
-        super().__init__(elements, lambda lyr: LayerContainer.LayerNameCleanerRegex.sub('_', lyr.value[0]))
+        super().__init__(elements, lambda lyr: LayerCollection.LayerNameCleanerRegex.sub('_', lyr.value[0]))
         
 
 class LayerWrapper(ParsedValueWrapper):

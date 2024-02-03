@@ -12,7 +12,7 @@ Created on Jan 29, 2024
 '''
 from skip.sexp.sourcefile import SourceFile
 from skip.pcbnew.layer import  LayersListWrapper
-from skip.pcbnew.net import NetContainer, NetWrapper
+from skip.pcbnew.net import NetCollection, NetWrapper
 from skip.pcbnew.segment import SegmentWrapper
 import logging 
 log = logging.getLogger(__name__)
@@ -52,14 +52,14 @@ class PCB(SourceFile):
     
     
     
-    def dedicated_container_type_for(self, entity_type:str):
-        dedicatedContainer = {
+    def dedicated_collection_type_for(self, entity_type:str):
+        dedicatedCollection = {
         
-            #'layers': LayerContainer
-            'net': NetContainer
+            #'layers': LayerCollection
+            'net': NetCollection
         }
-        if entity_type in dedicatedContainer:
-            return dedicatedContainer[entity_type]
+        if entity_type in dedicatedCollection:
+            return dedicatedCollection[entity_type]
         return None 
     def dedicated_wrapper_type_for(self, entity_type:str):
         

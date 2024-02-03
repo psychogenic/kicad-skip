@@ -5,7 +5,7 @@ Created on Feb 2, 2024
 @copyright: Copyright (C) 2024 Pat Deegan, https://psychogenic.com
 '''
 import math
-from skip.container import ElementContainer
+from skip.collection import ElementCollection
 from skip.sexp.parser import ParsedValue, ParsedValueWrapper
 # from skip.at_location import AtValue
 
@@ -155,7 +155,7 @@ class WireWrapper(ParsedValueWrapper):
         return f'<Wire {start} - {end}>'
         
 
-class WireContainer(ElementContainer):
+class WireCollection(ElementCollection):
     def __init__(self, elements:list):
         super().__init__(elements)
         
@@ -172,7 +172,7 @@ class WireContainer(ElementContainer):
     
     def within_circle(self, xcoord:float, ycoord:float, radius:float):
         '''    
-            Find all elements of this container that are within the 
+            Find all elements of this collection that are within the 
             circle of radius radius, centered on xcoord, ycoord.
             
             @note: only works for elements that have a
@@ -197,4 +197,4 @@ class WireContainer(ElementContainer):
         return retvals
         
     def __repr__(self):
-        return f'<WireContainer ({len(self)} wires)>'
+        return f'<WireCollection ({len(self)} wires)>'

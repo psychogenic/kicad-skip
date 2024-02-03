@@ -39,9 +39,9 @@ and more.
 Each attribute will either be:
   * an object 
   * a basic list of objects
-  * a container of objects
+  * a collection of objects
 
-Dedicated containers are used in some instances.  These can act just like lists
+Dedicated collections are used in some instances.  These can act just like lists
 
 for component in sch.symbol:
     print(f'Setting datasheet and DNP on {component.property.Reference.value}')
@@ -67,7 +67,7 @@ Created on Jan 29, 2024
 
 from skip.sexp.util import loadTree, writeTree
 from skip.sexp.parser import ParsedValue
-from skip.container import ElementContainer
+from skip.collection import ElementCollection
 import logging 
 log = logging.getLogger(__name__)
 
@@ -108,16 +108,16 @@ class SourceFile:
         '''
         log.debug(f'Will write {filepath}')
         return True
-    def dedicated_container_type_for(self, entity_type:str):
+    def dedicated_collection_type_for(self, entity_type:str):
         '''
             For subclass override, called when multiple 
             entities of this type are found, they will be grouped
-            in a new container of this type, if anything other than
+            in a new collection of this type, if anything other than
             None returned.
             
-            @return: Container type or None
+            @return: Collection type or None
         '''
-        log.debug(f"dedicated_container_type_for {entity_type}")
+        log.debug(f"dedicated_collection_type_for {entity_type}")
         
         return None 
     def dedicated_wrapper_type_for(self, entity_type:str):
@@ -198,17 +198,17 @@ class SourceFile:
             if len(entities) == 1: 
                 setattr(self, ent_type, entities[0]) 
             elif len(entities) > 1:
-                # multiple entities, may want a special container
-                dedicatedContainer = self.dedicated_container_type_for(ent_type)
+                # multiple entities, may want a special collection
+                dedicatedCollection = self.dedicated_collection_type_for(ent_type)
                 
-                if dedicatedContainer is None:
+                if dedicatedCollection is None:
                     # nope, just have a list
-                    log.debug(f'No deditaced container for {ent_type}, using default for {len(entities)}')
-                    setattr(self, ent_type, ElementContainer(entities))
+                    log.debug(f'No deditaced collection for {ent_type}, using default for {len(entities)}')
+                    setattr(self, ent_type, ElementCollection(entities))
                 else:
-                    # yep, stick a container there
-                    log.debug(f'Have a dedicated container {dedicatedContainer} for {ent_type}--sending {len(entities)} over')
-                    setattr(self, ent_type, dedicatedContainer(entities))
+                    # yep, stick a collection there
+                    log.debug(f'Have a dedicated collection {dedicatedCollection} for {ent_type}--sending {len(entities)} over')
+                    setattr(self, ent_type, dedicatedCollection(entities))
     
     def write(self, fpath:str):
         '''

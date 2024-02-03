@@ -5,7 +5,7 @@ Created on Feb 2, 2024
 @copyright: Copyright (C) 2024 Pat Deegan, https://psychogenic.com
 '''
 
-from skip.container import NamedElementContainer
+from skip.collection import NamedElementCollection
 from skip.sexp.parser import ParsedValue, ParsedValueWrapper
 from skip.eeschema.schematic.symbol import SymbolBase
 from skip.eeschema.pin import Pin
@@ -71,7 +71,7 @@ class LibSymbolPin(Pin):
         return f"<Pin '{self.name.value}' ({self.number.value}) >"
 
 
-class LibSymbolElementWithPins(NamedElementContainer):
+class LibSymbolElementWithPins(NamedElementCollection):
     def __init__(self, elements:list):
         super().__init__(elements, lambda lspin: lspin.number.value if lspin.name.value == '~' else lspin.name.value)
         

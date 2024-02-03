@@ -1,5 +1,5 @@
 '''
-Base classes for custom containers
+Base classes for custom collections
 
 Created on Jan 29, 2024
 
@@ -12,17 +12,17 @@ import math
 import logging 
 
 log = logging.getLogger(__name__)
-class ElementContainer:
+class ElementCollection:
     '''
-        A base class for element containers.
+        A base class for element collections.
         
         Mostly just acts like a list
         
-            for element in container:
+            for element in collection:
                 # do something
                 
-            if len(container) > 6:
-                container[6].whatever
+            if len(collection) > 6:
+                collection[6].whatever
         
         Also has utility methods to find elements within that
         are located within a certain zone or within reach of 
@@ -47,7 +47,7 @@ class ElementContainer:
     
     def within_reach_of(self, element, distance:float):
         '''    
-            Find all elements of this container that are within 
+            Find all elements of this collection that are within 
             reach of passed element.
             
             @param element: element in question, must have .at or .location
@@ -64,7 +64,7 @@ class ElementContainer:
         
     def within_circle(self, xcoord:float, ycoord:float, radius:float):
         '''    
-            Find all elements of this container that are within the 
+            Find all elements of this collection that are within the 
             circle of radius radius, centered on xcoord, ycoord.
             
             @note: only works for elements that have a
@@ -96,31 +96,31 @@ class ElementContainer:
         return len(self._elements)
     
     def __repr__(self):
-        return f'<Container {self._elements}>'
+        return f'<Collection {self._elements}>'
 
     
     def __str__(self):
         els = map(lambda e: str(e), self._elements)
         return '\n'.join(els)
 
-class NamedElementContainer(ElementContainer):
+class NamedElementCollection(ElementCollection):
     '''
         Named elements are those without a fixed name/key/type, e.g. the 
         properties of a symbol.
         
-        This container allows for list-like operation 
-            for element in container:
+        This collection allows for list-like operation 
+            for element in collection:
                 # do something
                 
-            if len(container) > 6:
-                container[6].whatever
+            if len(collection) > 6:
+                collection[6].whatever
         
         but also for named attributes
-            container.something_within 
+            collection.something_within 
         so 
-            container.<TAB><TAB> will show you all that's available.
+            collection.<TAB><TAB> will show you all that's available.
         
-        @see: property.PropertyContainer for real examples.
+        @see: property.PropertyCollection for real examples.
         
     '''
     NamePrefixEliminatorRegex = re.compile(r'^[^\w\d]+')

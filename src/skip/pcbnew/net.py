@@ -6,7 +6,7 @@ Created on Feb 1, 2024
 '''
 
 import re
-from skip.container import NamedElementContainer
+from skip.collection import NamedElementCollection
 from skip.sexp.parser import ParsedValue, ParsedValueWrapper
 
 
@@ -55,9 +55,9 @@ class NetWrapper(ParsedValueWrapper):
         return f'<Net {self.id} {self.name}>'
         
 
-class NetContainer(NamedElementContainer):
+class NetCollection(NamedElementCollection):
     '''
-       A container of all the nets.
+       A collection of all the nets.
        
        The actual nets within are accessible:
        
@@ -104,5 +104,5 @@ class NetContainer(NamedElementContainer):
         return v
     
     def __init__(self, elements:list):
-        super().__init__(elements, lambda nt: NetContainer.cleanNetName(nt.value[1]))
+        super().__init__(elements, lambda nt: NetCollection.cleanNetName(nt.value[1]))
         

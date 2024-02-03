@@ -6,15 +6,15 @@ Created on Jan 30, 2024
 '''
 
 import re
-from skip.container import NamedElementContainer, ElementContainer
+from skip.collection import NamedElementCollection, ElementCollection
 from skip.sexp.parser import ParsedValueWrapper, ParsedValue, ArbitraryNamedParsedValueWrapper
 
-class PropertyContainer(NamedElementContainer):
+class PropertyCollection(NamedElementCollection):
     '''
         Properties, like those of components (Reference, Datasheet, MPN, etc)
         are special in that you can name them yourself, so they are 
         different than most other entries in the schematic.
-        This container replaced the simple list to allow of both indexed
+        This collection replaced the simple list to allow of both indexed
             sym.property[0], len(obj.property)
         and named attributes
             sym.property.Reference 
@@ -56,22 +56,22 @@ class PropertyString(ArbitraryNamedParsedValueWrapper):
     
     '''
     
-    def __init__(self, pv:ParsedValue, propertyContainer:NamedElementContainer=None):
+    def __init__(self, pv:ParsedValue, propertyCollection:NamedElementCollection=None):
         super().__init__(pv)
-        self._container = propertyContainer
+        self._collection = propertyCollection
         
     def clone(self):
         cloned_el = self.wrapped_parsed_value.clone()
         
         # don't want to overwrite the existing, so must 
-        # change name, but to do this safely container must
+        # change name, but to do this safely collection must
         # not be set yet
         prop = type(self)(cloned_el)
         prop.name = f'{prop.name}clone'
-        # now set the container
-        prop._container = self._container
+        # now set the collection
+        prop._collection = self._collection
         # and addit
-        self._container.elementAdd(prop.name, prop)
+        self._collection.elementAdd(prop.name, prop)
         return prop
     
     def __repr__(self):
@@ -79,14 +79,14 @@ class PropertyString(ArbitraryNamedParsedValueWrapper):
         
     
     
-    def setParentContainer(self, propertyContainer:NamedElementContainer):
-        self._container = propertyContainer
+    def setParentCollection(self, propertyCollection:NamedElementCollection):
+        self._collection = propertyCollection
         
-    def updateParentContainer(self, oldName:str, newName:str):
-        if self._container is None:
+    def updateParentCollection(self, oldName:str, newName:str):
+        if self._collection is None:
             return 
-        self._container.elementRemove(oldName)
-        self._container.elementAdd(newName, self)
+        self._collection.elementRemove(oldName)
+        self._collection.elementAdd(newName, self)
         
 class ElementWithPropertiesWrapper(ParsedValueWrapper):
     def __init__(self, pv:ParsedValue):
@@ -95,10 +95,10 @@ class ElementWithPropertiesWrapper(ParsedValueWrapper):
         for p in pv.property:
             props.append(PropertyString(p))
         
-        pv.property = PropertyContainer(props)
+        pv.property = PropertyCollection(props)
         
         # ugh, this ain't pretty refactor later
         # only used to allow for changing the things name
         for p in props:
-            p.setParentContainer(pv.property)
+            p.setParentCollection(pv.property)
         

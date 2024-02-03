@@ -1,2 +1,2 @@
-from skip.property.property import ElementWithPropertiesWrapper, PropertyString, PropertyContainer
+from skip.property.property import ElementWithPropertiesWrapper, PropertyString, PropertyCollection
 

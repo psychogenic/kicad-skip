@@ -72,7 +72,7 @@ class ParsedValue(AccessesTree):
          instances.project[0].path.reference.value == 'C4'
          
         otherwise they are just objects.  Finally, some children that would be 
-        simple lists are replaced by specialized containers in higher levels 
+        simple lists are replaced by specialized collections in higher levels 
         to allow for things like named-access
         
           schematic.symbol.C4.property.Description.value
@@ -361,7 +361,7 @@ class ParsedValue(AccessesTree):
         
         self.children = children
         self._nameCounts = childnameCounts # just keeping for debug
-        specialChildrenContainers = {}
+        specialChildrenCollections = {}
         
         if all_entries_simple:
             self._value = children
@@ -379,9 +379,9 @@ class ParsedValue(AccessesTree):
                 centry_name = self.toSafeAttributeKey(c.entity_type)
                 if centry_name in childnameCounts and childnameCounts[centry_name] > 1:
                     
-                    if centry_name in specialChildrenContainers:
+                    if centry_name in specialChildrenCollections:
                         if not hasattr(self, centry_name):
-                            ccont = specialChildrenContainers[centry_name](self.sourceTree, centry_name)
+                            ccont = specialChildrenCollections[centry_name](self.sourceTree, centry_name)
                             setattr(self, centry_name, ccont)
                             self._added_children_names.append(centry_name)
                         ccont = getattr(self, centry_name)
@@ -563,7 +563,7 @@ class ArbitraryNamedParsedValueWrapper(ParsedValueWrapper):
         self.children[0] = setTo
         name = self._cleanse_name(setTo)
         self._setOnTree(self._name_coords, setTo)
-        self.updateParentContainer(oldName, name)
+        self.updateParentCollection(oldName, name)
         self._name = name
     @property 
     def value(self): 
@@ -581,7 +581,7 @@ class ArbitraryNamedParsedValueWrapper(ParsedValueWrapper):
         self._setOnTree(self._val_coords, x)
         
     
-    def updateParentContainer(self, oldName:str, newName:str):
+    def updateParentCollection(self, oldName:str, newName:str):
         pass 
     
     def __repr__(self):

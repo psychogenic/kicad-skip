@@ -30,9 +30,9 @@ and more.
 Each attribute will either be:
   * an object 
   * a basic list of objects
-  * a container of objects
+  * a collection of objects
 
-Dedicated containers are used in some instances.  These can act just like lists
+Dedicated collections are used in some instances.  These can act just like lists
 
 for component in sch.symbol:
     print(component.property.Reference.value)
