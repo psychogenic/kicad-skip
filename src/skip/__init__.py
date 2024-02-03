@@ -1,10 +1,10 @@
 '''
-Library to parse and manipulate Kicad 7+ (eeschema) kicad_sch schematic files.
+Library to parse and manipulate Kicad 7+ (skip) kicad_sch/kicad_pcb schematic and layout files.
 
-Simply create a schematic
+Example usage: Simply create a schematic object by loading a file
 
-import eeschema
-sch = eeschema.Schematic('/path/to/file.kicad_sch')
+import skip
+sch = skip.Schematic('/path/to/file.kicad_sch')
 
 The attributes available on the Schematic object will depend on the contents
 of the schematic, but in most cases you can expect a number of attributes, 
@@ -57,4 +57,5 @@ Created on Jan 29, 2024
 
 '''
 VERSION='0.0.9'
-from eeschema.schematic.schematic import Schematic
+from skip.eeschema.schematic import Schematic, Symbol
+from skip.pcbnew.pcb import PCB 

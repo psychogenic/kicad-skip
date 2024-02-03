@@ -6,8 +6,8 @@ Created on Jan 30, 2024
 '''
 
 import re
-from eeschema.schematic.container import NamedElementContainer, ElementContainer
-from eeschema.sexp.parser import ParsedValueWrapper, ParsedValue, ArbitraryNamedParsedValueWrapper
+from skip.container import NamedElementContainer, ElementContainer
+from skip.sexp.parser import ParsedValueWrapper, ParsedValue, ArbitraryNamedParsedValueWrapper
 
 class PropertyContainer(NamedElementContainer):
     '''

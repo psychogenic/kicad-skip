@@ -20,7 +20,7 @@ def writeTree(fpath:str, tree):
         # lines get too long with some schems, when it's all 
         # clumped into a bunch
         as_str = sexpdata.dumps(tree)
-        for elname in ['property', 'symbol', 'wire']:
+        for elname in ['property', 'symbol', 'wire', 'data']:
             as_str = re.sub(f'\(\s*{elname}', f'\n({elname}', as_str)
         f.write(as_str)
     

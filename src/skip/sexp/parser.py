@@ -64,6 +64,7 @@ class ParsedValue(AccessesTree):
                  [Symbol('reference'), 'C4'], [Symbol('unit'), 1]]]]
         would have such that
          instances.children[0].value == 'tinytapeout'
+         instances.children[0].children[2].value == 'C4'
          
         Children are also accessible as attributes.  
         If a there are (possibly) many children of the same type, this attribute will
@@ -95,14 +96,31 @@ class ParsedValue(AccessesTree):
         very nice.
         
     '''
-    
+    AttribInvalidCharsRe = re.compile(r'[^\w\d\_]')
+    StrStartsWithDigitRe = re.compile(r'^\d')
     @classmethod 
     def toString(cls, val):
         if isinstance(val, sexpdata.Symbol):
             return str(val.value())
         return str(val)
+    
+    @classmethod 
+    def toSafeAttributeKey(cls, val:str):
+        val = cls.AttribInvalidCharsRe.sub('_', val)
+        if cls.StrStartsWithDigitRe.match(val):
+            val = f'n{val}'
+        return val
        
     def __init__(self, sourceTree, tree, base_coords, parent=None):
+        '''
+            ParsedValue c'tor
+            
+            @param sourceTree: the whole guacamole
+            @param tree: the value we're parsing
+            @param base_coords: the path, in sourceTree, to get here
+            @param parent: the parent ParsedValue    
+        
+        '''
         super().__init__(sourceTree)
         self._parent_obj = parent
         self._entity_name = None 
@@ -148,11 +166,19 @@ class ParsedValue(AccessesTree):
         
         '''
         if self._is_bool_symbol(self._value):
+            
             if not isinstance(setTo, str):
+                
                 if setTo:
-                    setTo = 'yes'
+                    if self._is_yesno_bool(self._value):
+                        setTo = 'yes'
+                    else:
+                        setTo = 'true'
                 else:
-                    setTo = 'no'
+                    if self._is_yesno_bool(self._value):
+                        setTo = 'no'
+                    else:
+                        setTo = 'false'
             self._value = sexpdata.Symbol(setTo)
         else:
             if isinstance(self._value, sexpdata.Symbol):
@@ -320,7 +346,7 @@ class ParsedValue(AccessesTree):
             child_coord.append(idx + coord_adjust)
             log.debug(f'Parse subentry {entry}')
             if isinstance(entry, list) and len(entry):
-                entry_name = self.toString(entry[0])
+                entry_name = self.toSafeAttributeKey(self.toString(entry[0]))
                 if entry_name not in childnameCounts:
                     childnameCounts[entry_name] = 1
                 else:
@@ -342,10 +368,15 @@ class ParsedValue(AccessesTree):
         else:
             for c in children:
                 if not isinstance(c, ParsedValue):
-                    self._value = c
+                    if self._value is None:
+                        self._value = c
+                    elif not isinstance(self._value, list):
+                        self._value = [self._value, c]
+                    else:
+                        self._value.append(c)
                     continue
                     
-                centry_name = c.entity_type 
+                centry_name = self.toSafeAttributeKey(c.entity_type)
                 if centry_name in childnameCounts and childnameCounts[centry_name] > 1:
                     
                     if centry_name in specialChildrenContainers:
@@ -392,20 +423,30 @@ class ParsedValue(AccessesTree):
             
             
     def _is_bool_symbol(self, v):
-        
         if not isinstance(self._value, sexpdata.Symbol):
             return False 
             
         val = v.value()
-        if val == 'yes' or val == 'no':
-            return True 
+        
+        validBooleans = ['yes', 'no', 'true', 'false']
+        
+        return val in validBooleans
+    
+    def _is_yesno_bool(self, v):
+        if not isinstance(self._value, sexpdata.Symbol):
+            return False 
             
-        return False
+        val = v.value()
+        return val in ['yes', 'no']
+        
+        
         
     def _as_boolean(self, v):
         if not self._is_bool_symbol(v):
             return None
-        if v.value() == 'yes':
+        
+        vstr = v.value()
+        if vstr == 'yes' or vstr == 'true':
             return True
         
         return False

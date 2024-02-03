@@ -5,8 +5,8 @@ Created on Jan 30, 2024
 @copyright: Copyright (C) 2024 Pat Deegan, https://psychogenic.com
 '''
 
-from eeschema.property import ElementWithPropertiesWrapper
-from eeschema.sexp.parser import ParsedValue
+from skip.property.property import ElementWithPropertiesWrapper
+from skip.sexp.parser import ParsedValue
 
 class SheetWrapper(ElementWithPropertiesWrapper):
     def __init__(self, pv:ParsedValue):

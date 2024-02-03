@@ -4,7 +4,7 @@ Created on Jan 30, 2024
 @author: Pat Deegan
 @copyright: Copyright (C) 2024 Pat Deegan, https://psychogenic.com
 '''
-from eeschema.schematic import Schematic, Symbol
+from skip.eeschema.schematic import Schematic, Symbol
 
 def get_schematic(filepath:str) -> Schematic:
     '''
@@ -146,7 +146,17 @@ def find_all_movable_children(sym:Symbol, highlevel:bool=True):
         # so we get all the 'at' elements and then return their parent
         return list(map(lambda element: element.parent, sym.getElementsByEntityType('at')))
         
+
+def update_component_value(sym:Symbol, toValue:str):
+    
+    sym.property.Value.value = toValue # yeah, that's ugly I know
+    
+def update_all_1k_Rs(sch:Schematic, toValue:str='11k'):
+    for r in sch.symbol.value_matches(r'1k'):
+        if r.property.Reference.value.startswith('R'):
+            r.property.Value.value = toValue
             
+    
 if __name__ == '__main__':
     fpath = input('Enter path to a schematic (no worries will NOT overwrite): ')
     if not len(fpath):
@@ -176,6 +186,9 @@ if __name__ == '__main__':
                 s.exclude_from_sim.value = True 
         
         
+        print("Changing all 10k Rs to 13k333")
+        update_all_1k_Rs(sch, '13k333')
+        
         
         input("\n\n================\nHit enter to see those first few comps after mods")
         for i in range(len(sch.symbol)):
@@ -186,7 +199,7 @@ if __name__ == '__main__':
         print("Making a copy of all resistors, and moving it to the right")
         copy_and_move_all_resistors(sch)
         
-        savepath = input('Path to save results? WILL WRITE TO THIS FILE (empty for skip): ')
+        savepath = input('Path to save results? WILL WRITE TO THIS FILE (empty to skip): ')
         if len(savepath):
             sch.write(savepath)
         
