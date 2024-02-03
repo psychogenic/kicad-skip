@@ -5,6 +5,7 @@ Created on Jan 29, 2024
 @copyright: Copyright (C) 2024 Pat Deegan, https://psychogenic.com
 '''
 import re
+import copy
 from skip.property import ElementWithPropertiesWrapper
 from skip.collection import NamedElementCollection
 from skip.sexp.parser import ParsedValue
@@ -113,6 +114,43 @@ class SymbolBase(ElementWithPropertiesWrapper):
 
 
 class Symbol(SymbolBase):
+    '''
+        Symbol: the components in a schematic
+        
+        There are many plain attributes, such as 
+            in_bom
+            dnp
+            on_board
+        etc.
+        
+        Properties are available through the collection as
+         * a list
+             for prop in sym.property:
+                 # do stuff
+         * attributes as sym.property.NAME, e.g.
+             sym.property.Reference 
+             etc.
+        
+        Pins are available through the pin attribute, 
+        another collection, so as a list
+        
+            >>> for p in sym.pin:
+            ...     p
+            ... 
+            <SymbolPin 1 "VIN">
+            <SymbolPin 2 "GND">
+            <SymbolPin 3 "EN">
+            <SymbolPin 4 "NC">
+            <SymbolPin 5 "VOUT">
+            
+        or named
+        sym.pin.EN
+        
+        Utility methods are around to see what's actually 
+        attached to the symbol.
+        
+        
+    '''
     def __init__(self, pv:ParsedValue):
         super().__init__(pv)
         self._sympins_cont_cache = None 
@@ -122,11 +160,35 @@ class Symbol(SymbolBase):
     
     @property
     def is_power(self):
+        '''
+            whether this is from the power library 
+            (e.g. a GND symbol etc)
+        '''
         return self.lib_id.value.startswith('power:')
     
     
     @property 
     def pin(self):
+        '''
+            The collection of pins.
+            Pins are available through the pin attribute, 
+            another collection, so as a list
+            
+                >>> for p in sym.pin:
+                ...     p
+                ... 
+                <SymbolPin 1 "VIN">
+                <SymbolPin 2 "GND">
+                <SymbolPin 3 "EN">
+                <SymbolPin 4 "NC">
+                <SymbolPin 5 "VOUT">
+                
+            or named
+            sym.pin.EN
+            
+            use the REPL and tab completion to have a look.
+        '''
+            
         if self._sympins_cont_cache is not None:
             return self._sympins_cont_cache
         lib_pins_map = dict()
@@ -155,9 +217,13 @@ class Symbol(SymbolBase):
     
     @property 
     def attached_wires(self):
+        '''
+            Wires directly attached to the pins of this symbol
+        '''
         all_wires = []
         for p in self.pin:
             pwires = p.attached_wires
+            #print(f"WIRES FROM {p}:\n{pwires}")
             all_wires.extend(pwires)
         
         return all_wires
@@ -166,6 +232,9 @@ class Symbol(SymbolBase):
     
     @property 
     def attached_labels(self):
+        '''
+            Labels attached to the wires that are attached to this symbol
+        '''
         all_labels = []
         for p in self.pin:
             for lbl in p.attached_labels:
@@ -176,6 +245,10 @@ class Symbol(SymbolBase):
     
     @property 
     def attached_global_labels(self):
+        '''
+            Global labels attached to the wires that are attached to this symbol
+        
+        '''
         all_labels = []
         for p in self.pin:
             for lbl in p.attached_global_labels:
@@ -187,6 +260,9 @@ class Symbol(SymbolBase):
     
     @property 
     def attached_symbols(self):
+        '''
+            Symbols attached to the wires attached to the pins of the symbol -- oof
+        '''
         all_symbols = []
         for w in self.attached_wires:
             for sym in w.list_connected_symbols(True):
@@ -200,6 +276,11 @@ class Symbol(SymbolBase):
     
     @property 
     def lib_symbol(self):
+        '''
+            The library symbol this symbol is based on.  
+            The id is in the lib_id attribute.  This is an 
+            object instance.
+        '''
         if hasattr(self, 'lib_id') and len(self.lib_id.value):
             if hasattr(self.parent, 'lib_symbols'):
                 
@@ -222,7 +303,14 @@ class SymbolPinCollection(NamedElementCollection):
     pass
 
 class SymbolPin(Pin):
-    
+    '''
+        Symbol pin.
+        
+        Have a name and number and a location, which is 
+        calculated based on the state of the parent symbol and 
+        the definitions in the library symbol.
+        
+    '''
     def __init__(self, sympin:ParsedValue, lib_pin:ParsedValue):
         super().__init__(sympin)
         
@@ -239,9 +327,7 @@ class SymbolPin(Pin):
     @property 
     def location(self):
         par_at = AtValue(self.parent.at.value)
-        
-        
-        rel_at_raw = self._lib_sym_pin.at.value
+        rel_at_raw = copy.deepcopy(self._lib_sym_pin.at.value)
         if hasattr(self.parent, 'mirror'):
             mval = self.parent.mirror.value 
             
@@ -274,35 +360,50 @@ class SymbolPin(Pin):
         
     @property 
     def attached_wires(self):
+        '''
+            Wires attached to this pin
+        
+        '''
         loc = self.location 
         if not hasattr(self.parent.parent, 'wire'):
+            print("NO GLOB WIRE??")
             return []
         
         return self.parent.parent.wire.all_at(loc.x, loc.y)
     
     @property 
     def attached_labels(self):
-        all_labels = []
+        '''
+            Labels connected to wires attached to this pin
+        
+        '''
+        all_labels = set()
         for w in self.attached_wires:
             for lbl in w.list_labels(recursive_crawl=True):
-                if lbl not in all_labels:
-                    all_labels.append(lbl)
+                all_labels.add(lbl)
                     
-        return all_labels
+        return list(all_labels)
     
     @property 
     def attached_global_labels(self):
-        all_labels = []
+        '''
+            Global labels connected to wires attached to this pin
+        
+        '''
+        all_labels = set()
         for w in self.attached_wires:
             for lbl in w.list_global_labels(recursive_crawl=True):
-                if lbl not in all_labels:
-                    all_labels.append(lbl)
+                all_labels.add(lbl)
                     
-        return all_labels
+        return list(all_labels)
     
     
     @property 
     def attached_symbols(self):
+        '''
+            Symbols connected to wires attached to this pin
+        
+        '''
         all_syms = []
         for w in self.attached_wires:
             all_syms.extend(w.list_connected_symbols(recursive_crawl=True))

@@ -44,13 +44,12 @@ class WireWrapper(ParsedValueWrapper):
     
     def list_connected_symbols(self, recursive_crawl:bool = False):
         
-        all_syms = []
+        all_syms = set()
         if recursive_crawl:
             all_wires = self.crawl_connected_wires()
             for w in all_wires:
                 for sym in w.list_connected_symbols(False):
-                    if sym not in all_syms:
-                        all_syms.append(sym)
+                    all_syms.add(sym)
         else:
             startpoint = self.start.value 
             endpoint = self.end.value 
@@ -70,64 +69,60 @@ class WireWrapper(ParsedValueWrapper):
                     elif pinloc.x == endpoint[0] and pinloc.y == endpoint[1]:
                         addIt = sym 
                 
-                if addIt is not None and addIt not in all_syms:
-                    all_syms.append(addIt)
+                if addIt is not None:
+                    all_syms.add(addIt)
             
-        return all_syms
+        return list(all_syms)
                         
                         
                     
                 
     
     def list_labels(self, recursive_crawl:bool=False):
-        all_labels = []
+        all_labels = set()
         if recursive_crawl:
             all_wires = self.crawl_connected_wires()
             for w in all_wires:
                 for lbl in w.list_labels(False):
-                    if lbl not in all_labels:
-                        all_labels.append(lbl)
+                    all_labels.add(lbl)
         else:
             for p in self.list_points(1):
                 lbls = self.parent.label.within_circle(p[0], p[1], 0.6)
                 for lb in lbls:
-                    if lb not in all_labels:
-                        all_labels.append(lb)
+                    all_labels.add(lb)
         
-        return all_labels
+        return list(all_labels)
     
     
     def list_global_labels(self, recursive_crawl:bool=False):
-        all_labels = []
+        all_labels = set()
         
         if recursive_crawl:
             all_wires = self.crawl_connected_wires()
             for w in all_wires:
                 for lbl in w.list_global_labels(False):
-                    if lbl not in all_labels:
-                        all_labels.append(lbl)
+                    all_labels.add(lbl)
         else:
             for p in self.list_points(1):
                 lbls = self.parent.global_label.within_circle(p[0], p[1], 0.6)
                 for lb in lbls:
-                    if lb not in all_labels:
-                        all_labels.append(lb)
+                    all_labels.add(lb)
         
-        return all_labels
+        return list(all_labels)
     
-    def crawl_connected_wires(self, into_list:list = None):
+    def crawl_connected_wires(self, into_list:set = None):
         
         if into_list is None:
-            into_list = []
+            into_list = set()
         for p in [self.start, self.end]:
             found_wires = self.parent.wire.all_at(p[0], p[1])
             for w in found_wires:
-                if w not in into_list:
-                    into_list.append(w)
-                    if w != self:
-                        w.crawl_connected_wires(into_list)
+                if w != self and w not in into_list:
+                    w.crawl_connected_wires(into_list)
+                into_list.add(w)
                         
-        return into_list
+                        
+        return list(into_list)
             
     
     def list_points(self, step:float=1):
@@ -198,9 +193,9 @@ class WireCollection(ElementCollection):
         
     def all_at(self, x:float, y:float):
         ret_val = []
-        
         for w in self:
             for p in w.points:
+                #print(f"CHECK {p.value} for {x},{y}")
                 if p.value[0] == x and p.value[1] == y:
                     ret_val.append(w)
         
