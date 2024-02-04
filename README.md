@@ -252,7 +252,26 @@ This will return any label, global label or symbol with the constrained bounds.
 
 Further documentation to come.  For now, use the above, load a schematic in a console, and explore what's available using TAB-/code-completion.
 
-The main thing to note is that the leaves of the tree usually have a ".value" that should be used to access the actual contents and, especially, for setting values.  Have fun.
+
+### Notes
+
+The main thing to note is that the leaves of the tree usually have a ".value" that should be used to access the actual contents and, especially, for setting values. 
+
+Also, some elements have a position, and these can be moved or translated a certain amount
+
+  *  element.move(x, y, [rotation])
+  
+  *  element.translation(deltax, deltay)
+
+Finally, lots of these things are really deep--constructing from scratch is not the best idea.  Use
+
+  * element.clone()
+  
+and edit the returned copy.  Cloned elements will be at the level of their source--e.g. a cloned property will be in the symbol it was cloned from.  
+
+
+
+Have fun.
 
 2024-04-04
 Pat Deegan 
