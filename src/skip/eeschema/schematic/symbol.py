@@ -272,6 +272,13 @@ class Symbol(SymbolBase):
         return all_symbols
         
         
+    @property 
+    def attached_all(self):
+        all_attached = self.attached_symbols
+        all_attached.extend(self.attached_global_labels)
+        all_attached.extend(self.attached_labels)
+        return all_attached
+    
                 
     
     @property 
@@ -409,6 +416,13 @@ class SymbolPin(Pin):
             all_syms.extend(w.list_connected_symbols(recursive_crawl=True))
             
         return all_syms
+    
+    @property 
+    def attached_all(self):
+        all_attached = self.attached_symbols
+        all_attached.extend(self.attached_global_labels)
+        all_attached.extend(self.attached_labels)
+        return all_attached
     
         
     def __str__(self):

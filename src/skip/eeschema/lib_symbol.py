@@ -68,7 +68,7 @@ class LibSymbolPin(Pin):
         return self.wrapped_parsed_value.name
     
     def __repr__(self):
-        return f"<Pin '{self.name.value}' ({self.number.value}) >"
+        return f'<Pin {self.number.value} "{self.name.value}">'
 
 
 class LibSymbolElementWithPins(NamedElementCollection):

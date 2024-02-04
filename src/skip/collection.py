@@ -38,9 +38,9 @@ class ElementCollection:
         
     def _coordinates_for(self, el):
         coords = None
-        if hasattr(el, 'at'):
+        if hasattr(el, 'at') and el.at is not None:
             coords = el.at.value 
-        elif hasattr(el, 'location'):
+        elif hasattr(el, 'location') and el.location is not None:
             coords = el.location.value 
         return coords
     
@@ -65,7 +65,28 @@ class ElementCollection:
         coords = self._coordinates_for(element)
         return list(filter(lambda e: e!=element, self.within_circle(coords[0], coords[1], distance)))
             
+    def within_rectangle(self, x1coord:float, y1coord:float, x2coord:float, y2coord:float):
+        '''
+            Find all elements of this collection that are within the 
+            rectangle bounded by (x1,y1) - (x2,y2)
+        '''
+        retvals = []
+        if not len(self._elements):
+            return retvals
         
+        xrange = [x1coord, x2coord] if x1coord < x2coord else [x2coord, x1coord]
+        yrange = [y1coord, y2coord] if y1coord < y2coord else [y2coord, y1coord]
+    
+        for el in self:
+            coords = self._coordinates_for(el)
+            if coords is None:
+                continue
+            
+            if coords[0] >= xrange[0] and coords[0] <= xrange[1]:
+                if coords[1] >= yrange[0] and coords[1] <= yrange[1]:
+                    retvals.append(el)
+                
+        return retvals
     def within_circle(self, xcoord:float, ycoord:float, radius:float):
         '''    
             Find all elements of this collection that are within the 
@@ -92,6 +113,20 @@ class ElementCollection:
                 
         return retvals
             
+    def between_elements(self, positionedElement1, positionedElement2):
+        '''
+            return a list of all elements, between these two, i.e. located 
+            in the rectangle comprised by each of their locations.
+            
+            @param positionedElement1: some parsed value with an 'at' or 'location' 
+            @param positionedElement2: some parsed value with an 'at' or 'location' 
+        '''
+        coords1 = self._coordinates_for(positionedElement1)
+        coords2 = self._coordinates_for(positionedElement2)
+        if coords1 is None or coords2 is None:
+            return []
+        return self.within_rectangle(coords1[0], coords1[1], coords2[0], coords2[1])
+        
         
     def __getitem__(self, index:int):
         return self._elements[index]

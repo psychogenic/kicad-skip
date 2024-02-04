@@ -108,6 +108,93 @@ class Schematic(SourceFile):
         
         return None 
     
+    
+    
+    
+    
+    def _searchable_collections(self):
+        possible_collections = ['symbol', 'label', 'global_label']
+        colls = []
+        for pc in possible_collections:
+            if hasattr(self, pc):
+                colls.append(getattr(self, pc))
+        
+        return colls
+    
+    
+    def within_reach_of(self, element, distance:float):
+        '''    
+            Find all elements of this collection that are within 
+            reach of passed element.
+            
+            @param element: element in question, must have .at or .location
+            
+            @param distance: maximal distance, in coord units  
+            
+            @note: only works for elements that have a
+            suitable 'at' or 'location' attribute
+        
+        '''
+        retvals = []
+        for col in self._searchable_collections():
+            retvals.extend(col.within_reach_of(element, distance))
+        return retvals
+            
+    def within_rectangle(self, x1coord:float, y1coord:float, x2coord:float, y2coord:float):
+        '''
+            Find all elements of this collection that are within the 
+            rectangle bounded by (x1,y1) - (x2,y2)
+        '''
+        
+        retvals = []
+        for col in self._searchable_collections():
+            retvals.extend(col.within_rectangle(x1coord, y1coord, x2coord, y2coord))
+        return retvals
+    
+    
+    def within_circle(self, xcoord:float, ycoord:float, radius:float):
+        '''    
+            Find all elements of this collection that are within the 
+            circle of radius radius, centered on xcoord, ycoord.
+            
+            @note: only works for elements that have a
+            suitable 'at' or 'location' attribute
+        
+        '''
+        retvals = []
+        for col in self._searchable_collections():
+            retvals.extend(col.within_circle(xcoord, ycoord, radius))
+        return retvals
+            
+    def between_elements(self, positionedElement1, positionedElement2):
+        '''
+            return a list of all elements, between these two, i.e. located 
+            in the rectangle comprised by each of their locations.
+            
+            @param positionedElement1: some parsed value with an 'at' or 'location' 
+            @param positionedElement2: some parsed value with an 'at' or 'location' 
+        '''
+        
+        retvals = []
+        for col in self._searchable_collections():
+            retvals.extend(col.between_elements(positionedElement1, positionedElement2))
+        return retvals
+        
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     def __str__(self):
         if hasattr(self,'title_block'):
             return f"{self.__repr__()}\n{str(self.title_block)}"

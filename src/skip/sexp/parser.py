@@ -155,7 +155,9 @@ class ParsedValue(AccessesTree):
         as_bool = self._as_boolean(self._value) 
         if as_bool is not None:
             return as_bool 
-            
+        
+        if isinstance(self._value, sexpdata.Symbol):
+            return self._value.value()
         return self._value 
         
     @value.setter 
@@ -452,7 +454,10 @@ class ParsedValue(AccessesTree):
         return retVal
             
             
-            
+    def __bool__(self):
+        if self._is_bool_symbol(self._value):
+            return self._as_boolean(self._value)
+        return self._value
     def _is_bool_symbol(self, v):
         if not isinstance(self._value, sexpdata.Symbol):
             return False 
