@@ -85,6 +85,7 @@ class SourceFile:
         '''
         self.tree = None
         self._added_attribs = []
+        self._dedicatedWrappers = dict()
         self.read(filepath)
         
     @property 
@@ -166,9 +167,7 @@ class SourceFile:
                 print(e)
         
         self._all = bytype
-        dedicatedWrappers = {
-        }
-        
+                
         
         for ent_type,v in bytype.items():
             
@@ -178,18 +177,18 @@ class SourceFile:
             # no matter what, we'll have and attrib called this
             self._added_attribs.append(ent_type)
             
-            if ent_type not in dedicatedWrappers:
+            if ent_type not in self._dedicatedWrappers:
                 # never seen this type, check for dedicated wrapper
-                dedicatedWrappers[ent_type] = self.dedicated_wrapper_type_for(ent_type)
+                self._dedicatedWrappers[ent_type] = self.dedicated_wrapper_type_for(ent_type)
             
             # if we have a wrapper for this type
             # wrap all the entities with it and replace  
             entities = []   
-            if dedicatedWrappers[ent_type] is None:
+            if self._dedicatedWrappers[ent_type] is None:
                 # no wrappers, just the same ol' list as-is
                 entities = v 
             else:
-                wrapClass = dedicatedWrappers[ent_type]
+                wrapClass = self._dedicatedWrappers[ent_type]
                 if len(v):
                     entities = list(map(lambda baseobj: wrapClass(baseobj), v))
             
@@ -237,6 +236,21 @@ class SourceFile:
         '''
         log.info(f"Overwriting loaded file '{self._filepath}'")
         self.write(self._filepath)   
+        
+    def wrap(self, pv:ParsedValue):
+        ent_type = pv.entity_type
+        if ent_type not in self._dedicatedWrappers:
+            self._dedicatedWrappers[ent_type] = self.dedicated_wrapper_type_for(ent_type)
+        
+        wrapped = pv
+        if self._dedicatedWrappers[ent_type] is not None:
+            wrapClass = self._dedicatedWrappers[ent_type]
+            wrapped = wrapClass(pv)
+            
+        return wrapped
+
+
+        
     
     def __repr__(self):
         return f"<SourceFile '{self.filepath}'>"

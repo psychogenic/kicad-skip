@@ -10,6 +10,7 @@ import re
 import copy
 
 import logging 
+from dns.rdataclass import NONE
 log = logging.getLogger(__name__)
 class AccessesTree:
     def __init__(self, sourceTree):
@@ -123,6 +124,7 @@ class ParsedValue(AccessesTree):
         '''
         super().__init__(sourceTree)
         self._parent_obj = parent
+        self._parent_top_obj = None
         self._entity_name = None 
         self._base_coords = base_coords 
         self._deleted = False
@@ -240,6 +242,11 @@ class ParsedValue(AccessesTree):
                     ent_container = getattr(self.parent, self.entity_type)
                     if hasattr(ent_container, 'append'):
                         ent_container.append(clonedObj)
+                        
+                        
+        if clonedObj.parent_top is not None:
+            return clonedObj.parent_top.wrap(clonedObj)
+        
         return clonedObj
         
         
@@ -261,6 +268,25 @@ class ParsedValue(AccessesTree):
     @property 
     def parent(self):
         return self._parent_obj
+    
+    @property 
+    def parent_top(self):
+        if self._parent_top_obj is not None:
+            return self._parent_top_obj
+        
+        p = self.parent
+        if p is None:
+            return None 
+        
+        while hasattr(p, 'parent') and p.parent is not None:
+            p = p.parent 
+        
+        self._parent_top_obj = p 
+        
+        return p
+        
+        
+        
                 
         
     def getElementsByEntityType(self, tp:str):
