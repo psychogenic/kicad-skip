@@ -109,19 +109,23 @@ class SourceFile:
         '''
         log.debug(f'Will write {filepath}')
         return True
-    def dedicated_collection_type_for(self, entity_type:str):
-        '''
-            For subclass override, called when multiple 
-            entities of this type are found, they will be grouped
-            in a new collection of this type, if anything other than
-            None returned.
-            
-            @return: Collection type or None
-        '''
+    
+    @classmethod
+    def dedicated_collections_by_type(cls):
+        return {}
+    
+    @classmethod
+    def dedicated_collection_type_for(cls, entity_type:str):
+        dedicatedCollection = cls.dedicated_collections_by_type()
+        if entity_type in dedicatedCollection:
+            return dedicatedCollection[entity_type]
+        
         log.debug(f"dedicated_collection_type_for {entity_type}")
         
         return None 
-    def dedicated_wrapper_type_for(self, entity_type:str):
+    
+    @classmethod 
+    def dedicated_wrapper_type_for(cls, entity_type:str):
         '''
             For subclass override, called for entities, to allow 
             wrapping in some class.
@@ -141,7 +145,8 @@ class SourceFile:
         if not self.will_load(filepath):
             log.info(f'Aborting read of {filepath}')
             return
-    
+        
+        # load the tree from the file
         self._filepath = filepath    
         self.tree = loadTree(filepath)
         
@@ -167,7 +172,6 @@ class SourceFile:
                 print(e)
         
         self._all = bytype
-                
         
         for ent_type,v in bytype.items():
             
@@ -199,7 +203,7 @@ class SourceFile:
                 if dedicatedCollection is None:
                     setattr(self, ent_type, entities[0]) 
                 else:
-                    setattr(self, ent_type, dedicatedCollection(entities))
+                    setattr(self, ent_type, dedicatedCollection(self, entities))
             elif len(entities) > 1:
                 # multiple entities, may want a special collection
                 dedicatedCollection = self.dedicated_collection_type_for(ent_type)
@@ -207,11 +211,21 @@ class SourceFile:
                 if dedicatedCollection is None:
                     # nope, just have a list
                     log.debug(f'No deditaced collection for {ent_type}, using default for {len(entities)}')
-                    setattr(self, ent_type, ElementCollection(entities))
+                    setattr(self, ent_type, ElementCollection(self, entities))
                 else:
                     # yep, stick a collection there
                     log.debug(f'Have a dedicated collection {dedicatedCollection} for {ent_type}--sending {len(entities)} over')
-                    setattr(self, ent_type, dedicatedCollection(entities))
+                    setattr(self, ent_type, dedicatedCollection(self, entities))
+        
+        # finally, any dedicated collection may have a new() method associated, 
+        # so even if none of these are present, will create an empty collection
+        for ent_type, coll_type in self.dedicated_collections_by_type().items():
+            if ent_type in bytype:
+                # already handled, skiddaddle
+                continue 
+            
+            setattr(self, ent_type, coll_type(self, []))
+        
     
     def write(self, fpath:str):
         '''
@@ -253,7 +267,10 @@ class SourceFile:
             
         return wrapped
 
-
+    def new_from_list(self, p:list):
+        coord = len(self.tree)
+        self.tree.append(p)
+        return ParsedValue(self.tree, p, [coord], self)
         
     
     def __repr__(self):

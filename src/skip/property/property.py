@@ -30,9 +30,8 @@ class PropertyCollection(NamedElementCollection):
         
     '''
     def __init__(self, parent, elements:list):
-        super().__init__(elements, 
+        super().__init__(parent, elements, 
                          lambda p: re.sub(r'[^\w\d_]', '_', p.children[0]))
-        self.parent = parent
         
     
     def property_changed(self, name:str, to_value:str, from_value:str):

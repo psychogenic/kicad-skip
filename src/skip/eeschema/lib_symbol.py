@@ -20,7 +20,7 @@ class LibSymbolsListWrapper(NamedElementCollection):
     '''
     
     def __init__(self, pv:ParsedValue):
-        super().__init__([], None)
+        super().__init__(None, [], None)
         self._pv = pv
         for i in range(len(pv.children)):
             c = LibSymbol(pv[i])
@@ -92,8 +92,8 @@ class LibSymbolPin(Pin):
 
 
 class LibSymbolElementWithPins(NamedElementCollection):
-    def __init__(self, elements:list):
-        super().__init__(elements, lambda lspin: lspin.number.value if lspin.name.value == '~' else lspin.name.value)
+    def __init__(self, parent, elements:list):
+        super().__init__(parent, elements, lambda lspin: lspin.number.value if lspin.name.value == '~' else lspin.name.value)
         
 
 class LibSymbol(SymbolBase):
@@ -115,10 +115,10 @@ class LibSymbol(SymbolBase):
                     espins.append(pobj)
                     
                 # replace it
-                es.pin = LibSymbolElementWithPins(espins)
+                es.pin = LibSymbolElementWithPins(self, espins)
             self._symbol_units.append(es)
             
-        self._all_pins = LibSymbolElementWithPins(all_pins)
+        self._all_pins = LibSymbolElementWithPins(self, all_pins)
             
     
     @property 

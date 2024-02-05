@@ -56,6 +56,6 @@ Created on Jan 29, 2024
 @copyright: Copyright (C) 2024 Pat Deegan, https://psychogenic.com
 
 '''
-VERSION='0.1.3'
+VERSION='0.1.4'
 from skip.eeschema.schematic import Schematic, Symbol
 from skip.pcbnew.pcb import PCB 

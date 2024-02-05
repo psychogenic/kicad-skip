@@ -7,6 +7,7 @@ Created on Feb 2, 2024
 import math
 from skip.collection import ElementCollection
 from skip.sexp.parser import ParsedValue, ParsedValueWrapper
+from skip.element_template import ElementTemplate
 # from skip.at_location import AtValue
 
 class WireWrapper(ParsedValueWrapper):
@@ -188,8 +189,8 @@ class WireWrapper(ParsedValueWrapper):
         
 
 class WireCollection(ElementCollection):
-    def __init__(self, elements:list):
-        super().__init__(elements)
+    def __init__(self, parent, elements:list):
+        super().__init__(parent, elements)
         
     def all_at(self, x:float, y:float):
         ret_val = []
@@ -227,6 +228,11 @@ class WireCollection(ElementCollection):
                 retvals.append(el)
             
         return retvals
+        
+    
+    def _new_instance(self):
+        newObj = WireWrapper(self.parent.new_from_list(ElementTemplate['wire']))
+        return newObj
         
     def __repr__(self):
         return f'<WireCollection ({len(self)} wires)>'

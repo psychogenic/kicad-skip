@@ -15,6 +15,10 @@ from skip.eeschema.schematic.symbol import SymbolCollection, Symbol
 from skip.eeschema.sheet.sheet import SheetWrapper
 from skip.eeschema.lib_symbol import LibSymbolsListWrapper
 from skip.eeschema.wire import WireCollection, WireWrapper
+from skip.eeschema.label import LabelCollection, LabelWrapper
+from skip.eeschema.label import GlobalLabelCollection, GlobalLabelWrapper
+from skip.eeschema.text import TextCollection, TextWrapper
+from skip.eeschema.junction import JunctionCollection, JunctionWrapper
 import logging 
 log = logging.getLogger(__name__)
 
@@ -84,24 +88,31 @@ class Schematic(SourceFile):
         '''
         super().__init__(filepath)
     
-    
-    
-    def dedicated_collection_type_for(self, entity_type:str):
-        dedicatedCollection = {
+    @classmethod
+    def dedicated_collections_by_type(cls):
+        return {
         
             'symbol': SymbolCollection,
             'wire': WireCollection,
+            'label': LabelCollection,
+            'global_label': GlobalLabelCollection,
+            'text': TextCollection,
+            'junction': JunctionCollection
         }
-        if entity_type in dedicatedCollection:
-            return dedicatedCollection[entity_type]
-        return None 
-    def dedicated_wrapper_type_for(self, entity_type:str):
+    
+    
+    @classmethod 
+    def dedicated_wrapper_type_for(cls, entity_type:str):
         
         dedicatedWrapper = {
             'symbol': Symbol,
             'sheet': SheetWrapper,
             'lib_symbols': LibSymbolsListWrapper, # this single element acts like a list (children)
-            'wire': WireWrapper
+            'wire': WireWrapper,
+            'label': LabelWrapper,
+            'global_label': GlobalLabelWrapper,
+            'text': TextWrapper,
+            'junction': JunctionWrapper
         }
         if entity_type in dedicatedWrapper:
             return dedicatedWrapper[entity_type]

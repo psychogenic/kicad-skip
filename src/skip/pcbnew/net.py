@@ -103,6 +103,6 @@ class NetCollection(NamedElementCollection):
         v = cls.NetNameCleanerRegex.sub('_', v)
         return v
     
-    def __init__(self, elements:list):
-        super().__init__(elements, lambda nt: NetCollection.cleanNetName(nt.value[1]))
+    def __init__(self, parent, elements:list):
+        super().__init__(parent, elements, lambda nt: NetCollection.cleanNetName(nt.value[1]))
         

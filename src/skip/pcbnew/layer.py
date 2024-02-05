@@ -15,8 +15,8 @@ class LayerCollection(NamedElementCollection):
 
     '''
     LayerNameCleanerRegex = re.compile(r'[^\w\d_]')
-    def __init__(self, elements:list):
-        super().__init__(elements, lambda lyr: LayerCollection.LayerNameCleanerRegex.sub('_', lyr.value[0]))
+    def __init__(self, parent, elements:list):
+        super().__init__(parent, elements, lambda lyr: LayerCollection.LayerNameCleanerRegex.sub('_', lyr.value[0]))
         
 
 class LayerWrapper(ParsedValueWrapper):

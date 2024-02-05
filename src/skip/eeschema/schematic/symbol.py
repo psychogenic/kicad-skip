@@ -37,8 +37,8 @@ class SymbolCollection(NamedElementCollection):
 
     '''
     UnitToName = ['N/A', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K']
-    def __init__(self, elements:list):
-        super().__init__(elements, 
+    def __init__(self, parent, elements:list):
+        super().__init__(parent, elements, 
                          lambda s: s.property.Reference.value if s.unit.value == 1 else f'{s.property.Reference.value}_{self.UnitToName[s.unit.value]}')
         
         self._multi_unit_elements = dict()
@@ -229,7 +229,7 @@ class Symbol(SymbolBase):
                 matchingLibPin = lib_pins_map[pin_num]
                 pseudoPinsList.append(SymbolPin(sym_pin, matchingLibPin))
 
-        self._sympins_cont_cache = SymbolPinCollection(pseudoPinsList, lambda sp: sp.number if sp.name == '~' else sp.name)
+        self._sympins_cont_cache = SymbolPinCollection(self, pseudoPinsList, lambda sp: sp.number if sp.name == '~' else sp.name)
             
         return self._sympins_cont_cache
             

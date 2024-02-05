@@ -9,6 +9,7 @@ Created on Jan 29, 2024
 
 import re
 import math 
+import uuid
 import logging 
 
 log = logging.getLogger(__name__)
@@ -29,12 +30,34 @@ class ElementCollection:
         another element.  See within_circle() and within_reach_of()
         
     '''
-    def __init__(self, elements:list):
+    def __init__(self, parent, elements:list):
+        self._parent = parent
         self._elements = elements 
         
-        
+    @property 
+    def parent(self):
+        return self._parent 
+    
     def append(self, element):
         self._elements.append(element)
+    
+    def _new_instance(self):
+        raise NotImplementedError('Unimplemented')
+    
+    
+    def new(self):
+        '''
+            Create a fresh element in this collection, base on a template.
+        '''
+        newObj = self._new_instance()
+        if newObj is None:
+            log.error('Could not create a new instance')
+            return
+        for a_uuid in newObj.getElementsByEntityType('uuid'):
+            a_uuid.value = str(uuid.uuid4())
+            
+        self.append(newObj)
+        return newObj
         
     def _coordinates_for(self, el):
         coords = None
@@ -166,8 +189,8 @@ class NamedElementCollection(ElementCollection):
     NameStartsWithDigitRegex = re.compile(r'^\d')
     NameCleanerRegex = re.compile(r'[^\w\d_]+')
     NameMetaEliminatorRegex = re.compile(r'[}{)(\]\[]')
-    def __init__(self, elements:list, namefetcher):
-        super().__init__(elements)
+    def __init__(self, parent, elements:list, namefetcher):
+        super().__init__(parent, elements)
         self._named = dict()
         for el in elements:
             name = namefetcher(el)
@@ -198,6 +221,23 @@ class NamedElementCollection(ElementCollection):
             if name_for in self._named:
                 name_for = f'{name_for}_'
             self.elementAdd(name_for, element)
+            
+            
+    def _new_instance(self, identifier:str):
+        raise NotImplementedError('Unimplemented')
+    def new(self, identifier:str):
+        '''
+            Create a fresh element in this collection, base on a template.
+        '''
+        newObj = self._new_instance(identifier)
+        if newObj is None:
+            log.error(f'Could not create a new instance named "{identifier}"')
+            return 
+        for a_uuid in newObj.getElementsByEntityType('uuid'):
+            a_uuid.value = str(uuid.uuid4())
+        self.append(newObj)
+        
+        return newObj
             
     def elementRemove(self, elKey:str):
         del self._named[elKey]
