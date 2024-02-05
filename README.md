@@ -31,7 +31,7 @@ efficient and enjoyable.
 
 This array of LEDs 
 
-![Scripted Charlieplex](https://raw.githubusercontent.com/psychogenic/kicad-skip/main/img/repl.png)
+![Scripted Charlieplex](https://raw.githubusercontent.com/psychogenic/kicad-skip/main/img/charliegen.png)
 
 was created, wired up and labelled with a short script, available in an [example](https://github.com/psychogenic/kicad-skip/blob/main/src/skip/examples/charlieplex.py).
 
