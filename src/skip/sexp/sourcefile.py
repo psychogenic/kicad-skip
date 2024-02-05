@@ -64,7 +64,7 @@ Created on Jan 29, 2024
 @author: Pat Deegan
 @copyright: Copyright (C) 2024 Pat Deegan, https://psychogenic.com
 '''
-
+import copy
 from skip.sexp.util import loadTree, writeTree
 from skip.sexp.parser import ParsedValue
 from skip.collection import ElementCollection
@@ -269,8 +269,9 @@ class SourceFile:
 
     def new_from_list(self, p:list):
         coord = len(self.tree)
-        self.tree.append(p)
-        return ParsedValue(self.tree, p, [coord], self)
+        deep_cpy = copy.deepcopy(p)
+        self.tree.append(deep_cpy)
+        return ParsedValue(self.tree, deep_cpy, [coord], self)
         
     
     def __repr__(self):
