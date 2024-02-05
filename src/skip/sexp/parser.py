@@ -325,9 +325,11 @@ class ParsedValue(AccessesTree):
             Rotation param may be passed to set rotation, this must be 
             an int of 0,90,180 or 270
         '''
-        rot = self.at.value[2]
-        if rotation is not None:
-            rot = rotation 
+        rot = None
+        if len(self.at.value) > 2:
+            rot = self.at.value[2]
+            if rotation is not None:
+                rot = rotation 
         
         deltax = xcoord - self.at.value[0]
         deltay = ycoord - self.at.value[1]
@@ -340,9 +342,14 @@ class ParsedValue(AccessesTree):
         
         
     def _translate_method(self, by_x:float, by_y:float, set_rot:int=None):
-        if set_rot is None:
-            set_rot = self.at.value[2]
-        new_loc = [self.at.value[0] + by_x, self.at.value[1] + by_y, set_rot]
+        new_loc = [self.at.value[0] + by_x, self.at.value[1] + by_y]
+        
+        if len(self.at.value) > 2:
+            if set_rot is None:
+                set_rot = self.at.value[2]
+            
+            new_loc.append(set_rot)
+        
         self.at.value = new_loc
         for child in self.children:
             if hasattr(child, 'translation'):
