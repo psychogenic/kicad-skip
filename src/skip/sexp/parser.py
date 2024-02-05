@@ -243,15 +243,17 @@ class ParsedValue(AccessesTree):
             wrappedClone = clonedObj.parent_top.wrap(clonedObj)
         
         if self.parent is not None:
+            log.debug(f'Have parent of type{type(self.parent)}')
             if hasattr(self.parent, 'children'):
+                log.debug(f'adding to children')
                 self.parent.children.append(clonedObj)
             else:
-                
+                # log.error(f'no chiiiwdwen children')
                 log.info(f'Object parent exists but has no children {self.parent}')
                 if hasattr(self.parent, self.entity_type):
                     ent_container = getattr(self.parent, self.entity_type)
                     if hasattr(ent_container, 'append'):
-                        ent_container.append(clonedObj)
+                        ent_container.append(wrappedClone)
                         
                         
         
@@ -571,9 +573,6 @@ class ParsedValueWrapper:
     
     def __str__(self):
         return str(self._pv)
-    
-    def clone(self):
-        return self._pv.clone()
     
     
     @property 

@@ -214,12 +214,17 @@ class NamedElementCollection(ElementCollection):
     def name_for(cls, element):
         return None
     
+    
+    @classmethod 
+    def set_name_for(cls, to_name:str, element):
+        return None
+    
     def append(self, element):
         super().append(element)
         name_for = self.name_for(element)
         if name_for is not None and len(name_for):
             if name_for in self._named:
-                name_for = f'{name_for}_'
+                self.set_name_for(f'{name_for}_', element)
             self.elementAdd(name_for, element)
             
             

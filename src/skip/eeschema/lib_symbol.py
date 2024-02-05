@@ -22,13 +22,30 @@ class LibSymbolsListWrapper(NamedElementCollection):
     def __init__(self, pv:ParsedValue):
         super().__init__(None, [], None)
         self._pv = pv
+        self._libsyms_by_id = dict()
+        self._libsyms_attrib_names = []
         for i in range(len(pv.children)):
             c = LibSymbol(pv[i])
             pv.children[i] = c 
             c_name = c.value
-            # c_clean = pv.toSafeAttributeKey(c_name)
+            self._libsyms_by_id[c_name] = c # 
+            self._libsyms_attrib_names.append(pv[i].toSafeAttributeKey(c_name))
+            self.append(c)
             self.elementAdd(c_name, c)
             
+    
+    def __contains__(self, key):
+        return key in self._libsyms_by_id
+    
+    def __getitem__(self, key:int):
+        '''
+            syms by id
+        '''
+        if key in self._libsyms_by_id:
+            return self._libsyms_by_id[key]
+        
+        
+        raise AttributeError(f'No {key} here')
     
     def property_changed(self, name:str, to_value:str, from_value:str):
         return # nothing to do

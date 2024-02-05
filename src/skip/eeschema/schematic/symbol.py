@@ -54,6 +54,10 @@ class SymbolCollection(NamedElementCollection):
     def name_for(cls, element):
         return element.property.Reference.value 
     
+    
+    @classmethod 
+    def set_name_for(cls, to_name:str, element):
+        element.property.Reference.value = to_name
         
     def reference_startswith(self, prefix:str):
         '''
