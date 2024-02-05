@@ -11,6 +11,7 @@ from skip.element_template import ElementTemplate
 # from skip.at_location import AtValue
 
 class WireWrapper(ParsedValueWrapper):
+    RoundPrecision = 4
     def __init__(self,v:ParsedValue):
         super().__init__(v)
         self._slope = None 
@@ -22,16 +23,58 @@ class WireWrapper(ParsedValueWrapper):
         self._slope = None 
         for p in self.points:
             p.value = [round(p.value[0] + by_x, 6), round(p.value[1] + by_y, 6)]
-            
+    
+    
     
     @property 
     def points(self):
         return self.pts.xy
     
+    def _to_coords_list(self, coords):
+        if isinstance(coords, list):
+            return coords 
+        
+        if hasattr(coords, 'value') and isinstance(coords.value, list):
+            return coords.value
+        
+        if hasattr(coords, 'at') and coords.at:
+            return coords.at.value 
+        
+        if hasattr(coords, 'location') and coords.location:
+            return coords.location.value
+        
+        raise ValueError(f"Don't know how to get coordinates from {coords}")
+        
+    def start_at(self, coords):
+        coords = self._to_coords_list(coords)
+        self.start.value = [round(coords[0], self.RoundPrecision), round(coords[1], self.RoundPrecision)]
+    
     @property 
     def start(self):
         return self.pts.xy[0]
     
+    def end_at(self, coords):
+        coords = self._to_coords_list(coords)
+        self.end.value = [round(coords[0], self.RoundPrecision), round(coords[1], self.RoundPrecision)]
+        
+    @property 
+    def delta_x(self):
+        return self.end.value[0] - self.start.value[0]
+    
+    @delta_x.setter 
+    def delta_x(self, delta:float):
+        self.pts.xy[1].value =  [round(self.start.value[0] + delta, self.RoundPrecision), self.end.value[1]]
+        
+        
+    @property 
+    def delta_y(self):
+        return self.end.value[1] - self.start.value[1]
+        
+        
+    @delta_y.setter 
+    def delta_y(self, delta:float):
+        self.pts.xy[1].value = [self.end.value[0], round(self.start.value[1] + delta, self.RoundPrecision)]
+        
     @property 
     def end(self):
         return self.pts.xy[1]
