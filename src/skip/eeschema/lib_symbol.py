@@ -11,9 +11,29 @@ from skip.eeschema.schematic.symbol import SymbolBase
 from skip.eeschema.pin import Pin
 
 
+# property_changed
 
+class LibSymbolsListWrapper(NamedElementCollection):
+    '''
+        This one is weird... a single element libsymbols acts like a list 
+        for its children
+    '''
+    
+    def __init__(self, pv:ParsedValue):
+        super().__init__([], None)
+        self._pv = pv
+        for i in range(len(pv.children)):
+            c = LibSymbol(pv[i])
+            pv.children[i] = c 
+            c_name = c.value
+            # c_clean = pv.toSafeAttributeKey(c_name)
+            self.elementAdd(c_name, c)
+            
+    
+    def property_changed(self, name:str, to_value:str, from_value:str):
+        return # nothing to do
 
-class LibSymbolsListWrapper(ParsedValueWrapper):
+class LibSymbolsListWrapperOLD(ParsedValueWrapper):
     '''
         All lib symbols available.
         
@@ -100,7 +120,11 @@ class LibSymbol(SymbolBase):
             
         self._all_pins = LibSymbolElementWithPins(all_pins)
             
-        
+    
+    @property 
+    def container(self):
+        return self.parent_top.lib_symbols
+    
     @property 
     def symbol(self):
         return self._symbol_units

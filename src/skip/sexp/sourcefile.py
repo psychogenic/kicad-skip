@@ -194,8 +194,12 @@ class SourceFile:
             
             # this can lead to surprises (eg sheet, which may be single or multiple) 
             # but makes life simpler in most cases
+            dedicatedCollection = self.dedicated_collection_type_for(ent_type)
             if len(entities) == 1: 
-                setattr(self, ent_type, entities[0]) 
+                if dedicatedCollection is None:
+                    setattr(self, ent_type, entities[0]) 
+                else:
+                    setattr(self, ent_type, dedicatedCollection(entities))
             elif len(entities) > 1:
                 # multiple entities, may want a special collection
                 dedicatedCollection = self.dedicated_collection_type_for(ent_type)

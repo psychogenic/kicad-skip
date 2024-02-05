@@ -29,9 +29,14 @@ class PropertyCollection(NamedElementCollection):
         
         
     '''
-    def __init__(self, elements:list):
+    def __init__(self, parent, elements:list):
         super().__init__(elements, 
                          lambda p: re.sub(r'[^\w\d_]', '_', p.children[0]))
+        self.parent = parent
+        
+    
+    def property_changed(self, name:str, to_value:str, from_value:str):
+        self.parent.container.property_changed(name, to_value, from_value)
 
 class PropertyString(ArbitraryNamedParsedValueWrapper):
     
@@ -67,7 +72,7 @@ class PropertyString(ArbitraryNamedParsedValueWrapper):
         # change name, but to do this safely collection must
         # not be set yet
         prop = type(self)(cloned_el)
-        prop.name = f'{prop.name}clone'
+        prop.name = f'{prop.name}_'
         # now set the collection
         prop._collection = self._collection
         # and addit
@@ -77,7 +82,11 @@ class PropertyString(ArbitraryNamedParsedValueWrapper):
     def __repr__(self):
         return f"<PropertyString {self.name} = '{self.value}'>"
         
-    
+    def setValue(self, x):
+        old_value = self.getValue()
+        super().setValue(x)
+        self._collection.property_changed(self.name, self.getValue(), old_value)
+        
     
     def setParentCollection(self, propertyCollection:NamedElementCollection):
         self._collection = propertyCollection
@@ -95,10 +104,12 @@ class ElementWithPropertiesWrapper(ParsedValueWrapper):
         for p in pv.property:
             props.append(PropertyString(p))
         
-        pv.property = PropertyCollection(props)
+        pv.property = PropertyCollection(self, props)
         
         # ugh, this ain't pretty refactor later
         # only used to allow for changing the things name
         for p in props:
             p.setParentCollection(pv.property)
+            
+            
         

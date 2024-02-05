@@ -49,7 +49,11 @@ class SymbolCollection(NamedElementCollection):
         for multis in self._multi_unit_elements.keys():
             self.elementRename(multis, f'{multis}_{self.UnitToName[1]}')
             
-        
+    
+    @classmethod 
+    def name_for(cls, element):
+        return element.property.Reference.value 
+    
         
     def reference_startswith(self, prefix:str):
         '''
@@ -89,12 +93,26 @@ class SymbolCollection(NamedElementCollection):
 
     def multiple_units_for_reference(self, reference:str):
         return reference in self._multi_unit_elements
+    
+    
+    def property_changed(self, name:str, to_value:str, from_value:str):
+        if name != 'Reference':
+            return 
+        
+        self.elementRename(from_value, to_value)
 
 
 class SymbolBase(ElementWithPropertiesWrapper):
     def __init__(self, pv:ParsedValue):
         super().__init__(pv)
         
+        
+    
+    @property 
+    def container(self):
+        return NotImplementedError('override container property!')
+    
+    
     def __lt__(self, other):
         return self.property.Reference.value < other.property.Reference.value
   
@@ -154,6 +172,7 @@ class Symbol(SymbolBase):
     def __init__(self, pv:ParsedValue):
         super().__init__(pv)
         self._sympins_cont_cache = None 
+        
     @property 
     def allReferences(self):
         return self.getElementsByEntityType('reference')
@@ -300,6 +319,10 @@ class Symbol(SymbolBase):
                     pass 
         
         return None 
+    
+    @property 
+    def container(self):
+        return self.parent.symbol
     
     def __repr__(self):
         if self.unit is not None and self.unit.value != 1:

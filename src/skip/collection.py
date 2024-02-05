@@ -187,7 +187,18 @@ class NamedElementCollection(ElementCollection):
         
         return self.NameCleanerRegex.sub('_', key)
     
+    @classmethod 
+    def name_for(cls, element):
+        return None
     
+    def append(self, element):
+        super().append(element)
+        name_for = self.name_for(element)
+        if name_for is not None and len(name_for):
+            if name_for in self._named:
+                name_for = f'{name_for}_'
+            self.elementAdd(name_for, element)
+            
     def elementRemove(self, elKey:str):
         del self._named[elKey]
         

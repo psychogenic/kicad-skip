@@ -234,6 +234,11 @@ class ParsedValue(AccessesTree):
         coords = copy.deepcopy(self._base_coords)
         coords[-1] = idx 
         clonedObj = ParsedValue(self.sourceTree, rawclone, coords, self.parent)
+        
+        wrappedClone = clonedObj
+        if clonedObj.parent_top is not None:
+            wrappedClone = clonedObj.parent_top.wrap(clonedObj)
+        
         if self.parent is not None:
             if hasattr(self.parent, 'children'):
                 self.parent.children.append(clonedObj)
@@ -246,10 +251,8 @@ class ParsedValue(AccessesTree):
                         ent_container.append(clonedObj)
                         
                         
-        if clonedObj.parent_top is not None:
-            return clonedObj.parent_top.wrap(clonedObj)
         
-        return clonedObj
+        return wrappedClone
         
         
         
@@ -559,6 +562,23 @@ class ParsedValueWrapper:
     def __str__(self):
         return str(self._pv)
     
+    def clone(self):
+        return self._pv.clone()
+    
+    
+    @property 
+    def value(self): 
+        return self._pv.value 
+    
+    @value.setter
+    def value(self, x):
+        self._pv.value = x
+    
+    
+    def getValue(self):
+        return self._pv.value 
+    def setValue(self, x):
+        self._pv.value = x
     
     @property 
     def wrapped_parsed_value(self):
@@ -612,13 +632,18 @@ class ArbitraryNamedParsedValueWrapper(ParsedValueWrapper):
             value, as well as other children.
             @see: property.PropertyString for contrete examples
         '''
-        return self.children[1]
+        return self.getValue()
     
     @value.setter
     def value(self, x):
+        self.setValue(x)
+    
+    def getValue(self):
+        return self.children[1] 
+    def setValue(self, x):
         self.children[1] = x
         self._setOnTree(self._val_coords, x)
-        
+    
     
     def updateParentCollection(self, oldName:str, newName:str):
         pass 
