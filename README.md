@@ -141,7 +141,7 @@ conn = schem.symbol.J15
 
 # symbols have attributes
 if not conn.in_bom:
-    conn.dnp = True 
+    conn.dnp.value = True 
 
 # and properties (things that can be named by user)
 for p in conn.property:
@@ -412,7 +412,7 @@ Any collection can be treated as a list.  So you can loop over them, or access t
 Same applies to all of them.
 
 ```         
->>> sch.label
+>>> sch.label  # acts like a list
 <Collection [<label CC2>, <label CC1>, <label ~{CRVRST}>, <label vfused>]>
 >>> 
 ```
@@ -424,7 +424,7 @@ So `label`, `global_label`, `symbol`, `text`, `junction`, `image` etc depending 
 
 Some collections contain elements that have an identifier that it would be reasonable to believe is unique, such as `symbol`.  In such cases, named attributes are available as well.  
 
-This isn't of great use for general purpose scripts, but for navigating in a REPL it's a huge time saver.
+This isn't of great use for general purpose scripts, but for navigating in a REPL it's a *huge* time saver.
 
 These are all dynamically generated based on the contents of the source.
 
@@ -486,7 +486,7 @@ For many this is fine
 '2'
 ```
 
-For other, say when the pins have no name set and only a number available, a prefix *n* is used.  In more complex cases, a set of cleanups are executed
+For others, say when the pins have no name set and only a number available, a prefix *n* is used.  In more complex cases, a set of cleanups are executed
 
 ```
 >>> sch.symbol.U4_B.pin
@@ -499,9 +499,10 @@ For other, say when the pins have no name set and only a number available, a pre
 'mio[36]/~{ctrl_sel_rst}'
 ```
 
-In the example above, the *not* (~) prefix becomes n and invalid python chars discarded.
+In the example above, the *not* (~) prefix becomes _n_ and invalid python chars discarded.
 
-Worst case is that you can treat the collection as an array.
+Worst case is that you can treat the collection as an array, but when doing a quick fix from a terminal or poking around, the names come in very handy.
+
 
 #### Search functions
 
@@ -521,15 +522,15 @@ So `schem.symbol.within_circle(100, 100, 50)` will only return matching symbols,
 
 ### Specialer Elements
 
-Some elements in here are more involved and important that others, namely the symbols (components).
+Some elements in here are more involved and important that others, namely the **symbols** (components).
 
-In addition to their bare, source based, attributes symbols have
+In addition to their bare, source-based, attributes common to all elements, symbols also have
 
    * a `property` collection, with the Reference, Value, anything you've added to the edit dialog like MPN etc
    
    * a `pin` collection, which actually uses magic to combine with the lib_symbol this is based on and figure out pin locations
    
-   * means to find other connected things
+   * and various means to find other connected things
    
 For that last point, dymanic properties exist that allow you 
 
