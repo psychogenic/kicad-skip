@@ -2,11 +2,25 @@
 
 Copyright &copy; 2024 Pat Deegan, [psychogenic.com](https://psychogenic.com/)
 
+This library lets you manipulate kicad schematic (and other)  _source_ _files_  with Python, simply.
 
-This library is focused on scripted manipulations of schematics (and other) kicad  _source_ _files_  
-and allows any item to be edited in a hopefully intuitive way.
+At a minimum it presents a usable interface to the s-expression structure to add or modify data, but 
+it also does a lot behind the scenes to make both scripting and exploration using the REPL shell
+efficient and enjoyable.
 
-It also provides helpers for common operations.
+## Main features
+
+   * Explore, modify and create elements of a schematic using Python
+   
+   * Access to every bit of the source file using a common API
+   
+   * Kicad-specific enhancements to allow for 
+       * searching for elements by location, by connection (things that are attached to other things via wires), by type...
+       * search for symbols by name or regex, on reference or value
+       * easily access the location of any symbol pin, and more 
+   
+   * Lots of REPL-friendly features, so you can see at a glance what an element is, access it by name (e.g. *schematic.symbol.R14.dnp*), use **TAB-completion** 
+   
 
 I did a quick walk-through demo live on the maker cast, and it starts 
 [exactly here, in MakerCast episode 56](https://www.youtube.com/watch?v=CrlJETOhGnE&t=1099s)
@@ -31,17 +45,13 @@ Kicad schematic, layout and other files are stored as trees of s-expressions, li
     (uuid 342c76f3-b2b8-40b2-a0b0-d83e480188cc)
     (property "Reference" "J4" (at 311.15 29.21 0)(effects (font (size 1.27 1.27))))
     (property "Value" "TT04_BREAKOUT_REVB" (at 317.5 76.2 0) (effects (font (size 1.27 1.27))))
-    (property "Footprint" "TinyTapeout:TT04_BREAKOUT_SMB" (at 320.04 81.28 0)
-    (effects (font (size 1.27 1.27)) hide))
-    (pin "A1" (uuid 5132b98d-ec39-4a2b-974d-c4d323ea43eb))
     (pin "A10" (uuid bf1f9b27-0b93-4778-ac69-684e16bea09c))
-    (pin "A19" (uuid 43e3e4f6-008a-4ddf-a427-4414db85dcbb))
   ...
 ```
 which are great for machine parsing, but not so much for a quick scripted manipulation.
 
-With skip, you can quickly explore and modify the contents of a schematic (or, really, any
-kicad s-expression file).
+Though you can use the lib to quickly explore and modify the contents of any s-expression file,
+skip is optimized for use with kicad schematics (eeschema *kicad_sch* files).
 
 
 ## Examples
@@ -156,9 +166,24 @@ for p in conn.property:
 
 
 # clone pretty much anything and modify it
+# this is the easiest way to do complex elements
 >>> mpn_alt = conn.property.MPN.clone()
 >>> mpn_alt.name = 'MPN_ALT'
 >>> mpn_alt.value = 'ABC456'
+
+# or create wholly new elements (for some types at the moment)
+>>> a_wire = schem.wire.new()
+>>> a_wire.start.value = [schem.symbol.D1.pin.K.location.x, 20]
+>>> a_wire.end.value = [schem.symbol.D1.pin.K.location.x, 
+                    schem.symbol.D1.pin.K.location.y]
+>>> a_wire
+<Wire [2.54, 20] - [2.54, 25.4]>
+
+>>> title = schem.text.new()
+>>> title.value = 'Super Schem'
+>>> title.move(50, 10)
+>>> title
+<text Super Sch...>
 
 
 # save the result
@@ -304,7 +329,11 @@ A Schematic will, depending on the contents of the original source, have element
   
 and others (`image`, `polyline`, `rectangle`, `sheet`, `lib_symbols` etc etc -- go explore).
 
+For entities that may be constructed with `new()`, a collection will be present regardless of whether the schematic actually contains any of these (e.g. for labels, global labels, text and wires).
+
 Many of these have interesting additions, see below.
+
+Elements can be `clone()`ed (called on the item to copy) or, for some types at least, constructed with a `new()` call on the parent collection (see below).
 
 
 ## Elements and collections
@@ -442,6 +471,32 @@ sch.symbol.U4_D
 sch.symbol.U4_E
 sch.symbol.U7
 ```
+
+#### creating wholly new elements
+
+For some entities held in collections, it is possible to go beyond cloning and create elements using `new()`.
+
+At this time:
+
+  *  `wire` 
+  *  `label`
+  *  `global_labels` and
+  *  `text`
+
+collections allow you to call new on the collection itself.  It will be constructed and returned to you immediately, available in the collection thereafter.
+
+```
+glabel = schem.global_label.new()
+glabel.value
+'GLABEL'
+glabel.value = 'going_places'
+glabel.shape.value = 'output'
+glabel.move(100, 200)
+```
+
+These are based on the templates in `skip.element_template`, and have a suitable default structure.  The `uuid` may be ignored, it is replaced by a *uuid* library generated value on `clone()` or `new()` in any case.
+
+**Symbol collection**
 
 The symbol collection is so central it has a few additional methods for getting a hold of elements:
 
