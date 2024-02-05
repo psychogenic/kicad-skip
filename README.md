@@ -422,7 +422,9 @@ So `label`, `global_label`, `symbol`, `text`, `junction`, `image` etc depending 
 
 #### using named attributes
 
-Some collections contain elements that have an identifier that it would be reasonable to believe is unique, such as `symbol`.  In such cases, named attributes are available as well.
+Some collections contain elements that have an identifier that it would be reasonable to believe is unique, such as `symbol`.  In such cases, named attributes are available as well.  
+
+This isn't of great use for general purpose scripts, but for navigating in a REPL it's a huge time saver.
 
 These are all dynamically generated based on the contents of the source.
 
@@ -441,7 +443,18 @@ sch.symbol.U4_E
 sch.symbol.U7
 ```
 
-and some elements have attributes which are themselves collections, such as symbol properties, pins, etc
+The symbol collection is so central it has a few additional methods for getting a hold of elements:
+
+  * `reference_startswith(STR)`, lists all symbols with reference starting with this string, e.g. 'R' for resistors;
+  
+  * `reference_matches(REGEX)`, all symbols with refs matching this regex; and the same for values
+  
+  * `value_startswith(STR)`; and
+  
+  * `value_matches(REGEX)`
+  
+  
+Some elements have attributes which are themselves collections, such as symbol `properties`, `pins`, etc
 
 ```
 >>> for p in sch.symbol.U2.property:
