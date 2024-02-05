@@ -6,6 +6,7 @@ Created on Jan 29, 2024
 '''
 
 import sexpdata
+import uuid
 import re
 import copy
 
@@ -234,6 +235,8 @@ class ParsedValue(AccessesTree):
         coords = copy.deepcopy(self._base_coords)
         coords[-1] = idx 
         clonedObj = ParsedValue(self.sourceTree, rawclone, coords, self.parent)
+        for a_uuid in clonedObj.getElementsByEntityType('uuid'):
+            a_uuid.value = str(uuid.uuid4())
         
         wrappedClone = clonedObj
         if clonedObj.parent_top is not None:
