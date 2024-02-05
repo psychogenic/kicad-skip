@@ -22,6 +22,20 @@ efficient and enjoyable.
    * Lots of REPL-friendly features, so you can see at a glance what an element is, access it by name (e.g. *schematic.symbol.R14.dnp*), use **TAB-completion** 
    
 
+### Explore the schematic
+
+![REPL Friendly](https://raw.githubusercontent.com/psychogenic/kicad-skip/main/img/repl.png)
+
+
+### Script away drudgery
+
+This array of LEDs 
+
+![Scripted Charlieplex](https://raw.githubusercontent.com/psychogenic/kicad-skip/main/img/repl.png)
+
+was created, wired up and labelled with a short script, available in an [example](https://github.com/psychogenic/kicad-skip/blob/main/src/skip/examples/charlieplex.py).
+
+
 I did a quick walk-through demo live on the maker cast, and it starts 
 [exactly here, in MakerCast episode 56](https://www.youtube.com/watch?v=CrlJETOhGnE&t=1099s)
 
@@ -408,6 +422,32 @@ schem.symbol.R4.at.value = [10, 20, 0]
 
 The risk here is that R4 has a bunch of children (like the reference, etc) that have now *not* moved, whereas move() and translation() handle that for you.
 
+
+### Wiring
+
+Wires are a bit annoying to deal with, so functions have been added to make life easier.
+
+The have `start` and `end` points, which you can manipulate if you wish.
+
+The also support:
+
+  * `start_at(COORDS_OR_POSITIONABLE)`
+  
+  * `end_at(COORDS_OR_POSITIONABLE)`
+  
+  * `delta_x`  get/set attribute, calculated as end - start
+  
+  * `delta_y` get/set attribute, calculated as end - start
+  
+Thus you can do things like forcing it horizontal ("delta_y = 0") or stretching it out ("delta_x = 25.4") or start it on a pin without thinking of coordinates at all
+
+```
+join_wire = sch.wire.new()
+join_wire.start_at(sch.symbol.D2.pin.A)
+```
+
+
+See the [charlieplex example](https://github.com/psychogenic/kicad-skip/blob/main/src/skip/examples/charlieplex.py) for that, and junctions and labels and more.
 
 ### Collections
 
