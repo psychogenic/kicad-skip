@@ -181,6 +181,17 @@ class Symbol(SymbolBase):
     def allReferences(self):
         return self.getElementsByEntityType('reference')
     
+    def setAllReferences(self, toValue:str):
+        '''
+            Set all references, both the 
+            property.Reference
+            and the annoying instances.project[*].path.reference values 
+        '''
+        self.property.Reference.value = toValue
+        if hasattr(self, 'instances'):
+            for ref in self.instances.getElementsByEntityType('reference'):
+                ref.value = toValue
+                
     @property
     def is_power(self):
         '''
