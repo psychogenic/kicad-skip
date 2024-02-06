@@ -34,14 +34,15 @@ class WireWrapper(ParsedValueWrapper):
         if isinstance(coords, list):
             return coords 
         
+        if hasattr(coords, 'at') and coords.at is not None:
+            return coords.at.value 
+        
+        if hasattr(coords, 'location') and coords.location is not None:
+            return coords.location.value
+        
         if hasattr(coords, 'value') and isinstance(coords.value, list):
             return coords.value
         
-        if hasattr(coords, 'at') and coords.at:
-            return coords.at.value 
-        
-        if hasattr(coords, 'location') and coords.location:
-            return coords.location.value
         
         raise ValueError(f"Don't know how to get coordinates from {coords}")
         
