@@ -100,6 +100,7 @@ class ParsedValue(AccessesTree):
     '''
     AttribInvalidCharsRe = re.compile(r'[^\w\d\_]')
     StrStartsWithDigitRe = re.compile(r'^\d')
+    PositionPrecision = 6
     @classmethod 
     def toString(cls, val):
         if isinstance(val, sexpdata.Symbol):
@@ -344,7 +345,10 @@ class ParsedValue(AccessesTree):
         
         
     def _translate_method(self, by_x:float, by_y:float, set_rot:int=None):
-        new_loc = [self.at.value[0] + by_x, self.at.value[1] + by_y]
+        new_loc = [ 
+                round(self.at.value[0] + by_x, self.PositionPrecision), 
+                round(self.at.value[1] + by_y, self.PositionPrecision)
+                ]
         
         if len(self.at.value) > 2:
             if set_rot is None:
