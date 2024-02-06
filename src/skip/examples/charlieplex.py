@@ -35,7 +35,6 @@ def createLEDs(basedOn:Symbol, numrows:int, numcols:int, start_ref_count:int=1):
     for row in range(numrows):
         column_leds = []
         for col in range(numcols):
-            dcount += 1
             # clone the symbol
             newD = basedOn.clone()
             
@@ -53,6 +52,8 @@ def createLEDs(basedOn:Symbol, numrows:int, numcols:int, start_ref_count:int=1):
             
             # keep track of LEDs we cloned
             column_leds.append(newD)
+            
+            dcount += 1
         
         table.append(column_leds)
             
@@ -71,14 +72,14 @@ def createAndWireLEDs(sch:Schematic, basedOn:Symbol,
     cath_wires = []
     # for every LED, we're going to pull out the A pin over the LED and make
     # rows
-    # we'll pull out K pin horizontally and make columns
+    # we'll pull out K pin vertically and make columns
     for a_row in led_table:
         pu_wires = []
         
-        cathod_wires = []
+        cathode_wires = []
         for a_led in a_row:
             # depending on left or right orientation, we'll want to 
-            # draw our wires out
+            # draw our wires ou
             awire_direction = -1 if a_led.at.value[2] == 180 else 1
             kwire_direction = -1 if awire_direction == 1 else 1
             
@@ -94,7 +95,7 @@ def createAndWireLEDs(sch:Schematic, basedOn:Symbol,
             # we want it one grid space out, in the right direction
             kwire.delta_x = kwire_direction*unitspace
             # stash the wire
-            cathod_wires.append(kwire)
+            cathode_wires.append(kwire)
             
             # for the anode, we'll make two wires, one straight out,
             # one upward
@@ -116,7 +117,7 @@ def createAndWireLEDs(sch:Schematic, basedOn:Symbol,
         
         # keep all the wires in lists, by row
         an_wires.append(pu_wires)
-        cath_wires.append(cathod_wires)
+        cath_wires.append(cathode_wires)
     
     
     # now we want a big wire joining each row together
@@ -170,7 +171,7 @@ def createAndWireLEDs(sch:Schematic, basedOn:Symbol,
         lbl.move(join_wire.end.value[0], join_wire.end.value[1])
         lbl.value = f'COL_{col+1}'
         
-        print(f'Done: created a {numrows}x{numcols} grid')
+    print(f'Done: created a {numrows}x{numcols} grid')
         
 
 
