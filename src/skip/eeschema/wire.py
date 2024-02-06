@@ -17,6 +17,7 @@ class WireWrapper(ParsedValueWrapper):
         self._slope = None 
         self._unit_vector = None 
         self._wire_mag = None
+        self._specs_calculated = False
         
     def translation(self, by_x:float, by_y:float):
         self._unit_vector = None 
@@ -52,6 +53,7 @@ class WireWrapper(ParsedValueWrapper):
     
     @property 
     def start(self):
+        self._specs_calculated = False
         return self.pts.xy[0]
     
     def end_at(self, coords):
@@ -60,7 +62,7 @@ class WireWrapper(ParsedValueWrapper):
         
     @property 
     def delta_x(self):
-        return self.end.value[0] - self.start.value[0]
+        return round(self.end.value[0] - self.start.value[0], self.RoundPrecision)
     
     @delta_x.setter 
     def delta_x(self, delta:float):
@@ -69,26 +71,27 @@ class WireWrapper(ParsedValueWrapper):
         
     @property 
     def delta_y(self):
-        return self.end.value[1] - self.start.value[1]
+        return round(self.end.value[1] - self.start.value[1], self.RoundPrecision)
         
         
     @delta_y.setter 
     def delta_y(self, delta:float):
+        self._wire_mag = None # reset 
         self.pts.xy[1].value = [self.end.value[0], round(self.start.value[1] + delta, self.RoundPrecision)]
         
     @property 
     def end(self):
+        self._specs_calculated = False
         return self.pts.xy[1]
     
     @property 
     def length(self):
-        if self._wire_mag is None:
+        if not self._specs_calculated:
             self._calculate_specs()
         
         return round(self._wire_mag, 4)
     
     def list_connected_symbols(self, recursive_crawl:bool = False):
-        
         all_syms = set()
         if recursive_crawl:
             all_wires = self.crawl_connected_wires()
@@ -193,7 +196,7 @@ class WireWrapper(ParsedValueWrapper):
     
     @property 
     def unit_vector(self):
-        if self._unit_vector is not None:
+        if self._specs_calculated:
             return self._unit_vector
         self._calculate_specs()
         return self._unit_vector
@@ -221,8 +224,8 @@ class WireWrapper(ParsedValueWrapper):
             normalizer = 1/vect_mag
             self._unit_vector = (normalizer, slope/normalizer) 
         
+        self._specs_calculated = True
         self._wire_mag = wire_mag
-        
         self._slope = slope
         
         
