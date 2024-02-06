@@ -224,7 +224,8 @@ class NamedElementCollection(ElementCollection):
         name_for = self.name_for(element)
         if name_for is not None and len(name_for):
             if name_for in self._named:
-                self.set_name_for(f'{name_for}_', element)
+                name_for = f'{name_for}_'
+                self.set_name_for(name_for, element)
             self.elementAdd(name_for, element)
             
             
