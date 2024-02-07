@@ -37,18 +37,13 @@ def createLEDs(basedOn:Symbol, numrows:int, numcols:int, start_ref_count:int=1):
         for col in range(numcols):
             # clone the symbol
             newD = basedOn.clone()
-            
-            # set it's reference
-            myref = f'D{dcount}'
-            newD.property.Reference.value = myref
-            # ugh kicad gets annoying with this when opening in eeschema
-            # outside of a project--force all references to be this
-            for ref in newD.getElementsByEntityType('reference'):
-                ref.value = myref
                 
             # move this component where we want it, on the grid
             coords = to_grid(col*7, row*6)
             newD.move(coords[0] - 1.27, coords[1])
+            
+            # set it's reference (all of em!)
+            newD.setAllReferences(f'D{dcount}')
             
             # keep track of LEDs we cloned
             column_leds.append(newD)
