@@ -21,6 +21,9 @@ efficient and enjoyable.
    
    * Lots of REPL-friendly features, so you can see at a glance what an element is, access it by name (e.g. *schematic.symbol.R14.dnp*), use **TAB-completion** 
    
+### Overview and Walk-through video
+
+[![Watch the video](https://img.youtube.com/vi/EP1GtsZ2VfM/default.jpg)](https://youtu.be/EP1GtsZ2VfM)
 
 ### Explore the schematic
 
