@@ -24,6 +24,8 @@ efficient and enjoyable.
 ### Overview and Walk-through video
 
 I've put out an intro video where I walk through some REPL usage and create a LED array generator.  To see that click on:
+
+
 [![Watch the video](https://img.youtube.com/vi/EP1GtsZ2VfM/mqdefault.jpg)](https://youtu.be/EP1GtsZ2VfM)
 
 ### Explore the schematic
