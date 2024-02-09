@@ -4,7 +4,7 @@ Created on Feb 5, 2024
 @author: Pat Deegan
 @copyright: Copyright (C) 2024 Pat Deegan, https://psychogenic.com
 '''
-
+import re
 from skip.collection import ElementCollection
 from skip.sexp.parser import ParsedValue, ParsedValueWrapper
 from skip.element_template import ElementTemplate
@@ -24,12 +24,31 @@ class BaseLabelWrapper(ParsedValueWrapper):
         
         return f'<{self.entity_type}>'
 
+
+class BaseLabelCollection(ElementCollection):
+    def __init__(self, parent, elements:list):
+        super().__init__(parent, elements)
+        
+    def value_startswith(self, prefix:str):
+        '''    
+            Return a list of all labels of this type that start with prefix.
+        '''
+        return list(filter(lambda lb: lb.value.startswith(prefix), self))
+    
+        
+    def value_matches(self, regex:str):
+        '''
+            Return a list of all labels matching regex
+        '''
+        return list(filter(lambda lb: re.match(regex, lb.value), self))
+
+
 class LabelWrapper(BaseLabelWrapper):
     def __init__(self,v:ParsedValue):
         super().__init__(v)
         
 
-class LabelCollection(ElementCollection):
+class LabelCollection(BaseLabelCollection):
     def __init__(self, parent, elements:list):
         super().__init__(parent, elements)
         
@@ -43,7 +62,7 @@ class GlobalLabelWrapper(BaseLabelWrapper):
         super().__init__(v)
         
 
-class GlobalLabelCollection(ElementCollection):
+class GlobalLabelCollection(BaseLabelCollection):
     def __init__(self, parent, elements:list):
         super().__init__(parent, elements)
         
