@@ -8,7 +8,7 @@ import sexpdata
 import re
 import logging 
 log = logging.getLogger(__name__)
-
+MaxLineLength = 255*3
 def loadTree(fpath:str):
     with open(fpath, 'r') as f:
         return sexpdata.loads(f.read())
@@ -20,9 +20,17 @@ def writeTree(fpath:str, tree):
         # lines get too long with some schems, when it's all 
         # clumped into a bunch
         as_str = sexpdata.dumps(tree)
-        for elname in ['property', 'symbol', 'wire', 'data']:
-            as_str = re.sub(f'\(\s*{elname}', f'\n({elname}', as_str)
-        f.write(as_str)
+        for elname in ['property', 'symbol', 'wire', 'data', 'label', 
+                       'global_label', 'text', 'junction', 'polyline', 'rectangle']:
+            as_str = re.sub(f'\(\s*{elname}', f'\n\n({elname}', as_str)
+            
+        out_lines = []
+        for aline in as_str.split('\n'):
+            if len(aline) > MaxLineLength and aline.startswith('(data'):
+                aline = re.sub(' ', ' \n', aline)
+            out_lines.append(aline)
+                
+        f.write('\n'.join(out_lines))
     
 def list_splice(target, start, delete_count=None, *items):
     """Remove existing elements and/or add new elements to a list.
