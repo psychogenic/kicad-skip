@@ -28,6 +28,8 @@ I've put out an intro video where I walk through some REPL usage and create a LE
 
 [![Watch the video](https://img.youtube.com/vi/EP1GtsZ2VfM/mqdefault.jpg)](https://youtu.be/EP1GtsZ2VfM)
 
+I've also put up a [Scripting For Kicad Schematics In Python](https://inductive-kickback.com/2024/02/scripting-for-kicad-schematics-in-python/) blog post, with some intro, background and hopefully more human-friendly reading.
+
 ### Explore the schematic
 
 ![REPL Friendly](https://raw.githubusercontent.com/psychogenic/kicad-skip/main/img/repl.png)
