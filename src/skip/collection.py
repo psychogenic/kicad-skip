@@ -246,7 +246,8 @@ class NamedElementCollection(ElementCollection):
         return newObj
             
     def elementRemove(self, elKey:str):
-        del self._named[elKey]
+        if elKey in self._named:
+            del self._named[elKey]
         
     def elementAdd(self, elKey:str, element):
         self._named[self._cleanse_key(elKey)] = element 

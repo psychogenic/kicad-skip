@@ -75,7 +75,7 @@ class PropertyString(ArbitraryNamedParsedValueWrapper):
         # now set the collection
         prop._collection = self._collection
         # and addit
-        self._collection.elementAdd(prop.name, prop)
+        self._collection.append(prop)
         return prop
     
     def __repr__(self):
