@@ -39,7 +39,7 @@ This array of LEDs
 
 ![Scripted Charlieplex](https://raw.githubusercontent.com/psychogenic/kicad-skip/main/img/charliegen.png)
 
-was created, wired up and labelled with a short script, available in an [example](https://github.com/psychogenic/kicad-skip/blob/main/src/skip/examples/charlieplex.py).
+was created, wired up and labelled with a short script, available in an [example](https://github.com/psychogenic/kicad-skip/blob/main/src/skip/examples/charlieplex.py).  The example now provides for both XY grid and charlieplexed arrays, and shows how to clone elements, wire things up, and play with both types of label.
 
 
 I did a quick walk-through demo live on the maker cast, and it starts 
@@ -337,7 +337,7 @@ A Schematic will, depending on the contents of the original source, have element
 
   * `title_block`, which has a `title`, `comment`, `company` and other items within;
   
-  * `wire`, all the wires in the schem;
+  * `wire`, `junction`, `no_connect` all the connectivity related stuff;
   
   * `symbol`, all the symbols (components) in the schem
   
@@ -345,7 +345,8 @@ A Schematic will, depending on the contents of the original source, have element
   
   * `label`, all the labels (i.e. net names);
   
-  * `text`, all the text blocks
+  * `text`, all the text blocks; 
+  
   
 and others (`image`, `polyline`, `rectangle`, `sheet`, `lib_symbols` etc etc -- go explore).
 
@@ -495,6 +496,31 @@ Same applies to all of them.
 So `label`, `global_label`, `symbol`, `text`, `junction`, `image` etc depending on what's in there... TAB TAB to find out!
 
 
+#### searching within collections
+
+In addition to basic searches by position, as described above, some collections have additional filtering methods.
+
+
+Label collections, both `label` and `global_label` also have the ability to return subsets based on the value of the label
+
+   * `value_startswith(STR)`; and
+    
+   * `value_matches(REGEX)`
+   
+will give you a list of matching labels/global labels.
+
+In addition to those two, the symbol collection has the equivalent for the Reference property:
+
+
+  * `reference_startswith(STR)`; and
+  
+  * `reference_matches(REGEX)`
+  
+All these will return lists (which may be empty).
+
+
+
+
 #### using named attributes
 
 Some collections contain elements that have an identifier that it would be reasonable to believe is unique, such as `symbol`.  In such cases, named attributes are available as well.  
@@ -517,6 +543,7 @@ sch.symbol.U4_D
 sch.symbol.U4_E
 sch.symbol.U7
 ```
+
 
 #### creating wholly new elements
 
