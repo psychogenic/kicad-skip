@@ -14,7 +14,7 @@
 '''
 from skip import Symbol, Schematic
 
-gridOrigin = (15, 10)
+gridOrigin = (18, 10)
 unitspace = 2.54
 
 def units_to_mm(u:int):
@@ -55,7 +55,9 @@ def createLEDs(basedOn:Symbol, numrows:int, numcols:int, start_ref_count:int=1):
     return table
 
 def createAndWireLEDs(sch:Schematic, basedOn:Symbol, 
-                      numrows:int, numcols:int, start_ref_count:int=1):
+                      numrows:int, numcols:int, 
+                      row_label_prefix:str, 
+                      start_ref_count:int=1):
     '''
         Get the grid of cloned diodes, and wire them up, with junctions and labels.
     
@@ -135,9 +137,11 @@ def createAndWireLEDs(sch:Schematic, basedOn:Symbol,
         row_count += 1
         lbl = sch.global_label.new()
         lbl.move(join_wire.end.value[0], join_wire.end.value[1])
-        lbl.value = f'ROW_{row_count}'
+        lbl.value = f'{row_label_prefix}_{row_count}'
         
-    
+    # this is what we'll return, the wires that form the columns,
+    # unlabeled
+    column_wires = []
     # ok, wire up the columns
     for col in range(numcols):
         
@@ -154,23 +158,55 @@ def createAndWireLEDs(sch:Schematic, basedOn:Symbol,
         join_wire.stroke.width.value = 0.4
         join_wire.stroke.type.value = 'dot'
         
+        column_wires.append(join_wire)
         # add some junctions
         for rowidx in range(1, numrows):
             end_coords = cath_wires[rowidx][col].end.value
             junc = sch.junction.new()
             junc.move(end_coords[0], end_coords[1])
             
-            
-        # add a lable
+        
+    return column_wires
+        
+
+def createXYGrid(sch:Schematic, basedOn:Symbol, 
+                      numrows:int, numcols:int, start_ref_count:int=1):
+    
+    column_wires = createAndWireLEDs(sch, basedOn, numrows, numcols, 'ROW', start_ref_count)
+    
+    col_count = 0
+    for join_wire in column_wires:
+        # add a global label
         lbl = sch.global_label.new()
         lbl.move(join_wire.end.value[0], join_wire.end.value[1])
-        lbl.value = f'COL_{col+1}'
+        lbl.value = f'COL_{col_count+1}'
+        col_count += 1
         
+    
     print(f'Done: created a {numrows}x{numcols} grid')
+    
+
+def createCharlieplex(sch:Schematic, basedOn:Symbol, 
+                      numrows:int, numcols:int, start_ref_count:int=1):
+    
+    column_wires = createAndWireLEDs(sch, basedOn, numrows, numcols, 'CHRLY', start_ref_count)
+    
+    col_count = 0
+    for join_wire in column_wires:
+        # add a global label
+        lbl = sch.label.new()
+        lbl.move(join_wire.end.value[0], join_wire.end.value[1], 90)
+        lbl.value = f'CATH_{col_count+1}'
+        col_count += 1
         
-
-
-
+    row_labels = sch.global_label.value_startswith('CHRLY')
+    for i in range(len(row_labels)):
+        rowlbl = row_labels[i]
+        lbl = sch.label.new()
+        lbl.value = f'CATH_{i+1}'
+        lbl.move(rowlbl.at.value[0] + units_to_mm(1), rowlbl.at.value[1])
+        
+    print(f'Done: created a {numrows}x{numcols} charlieplex')
 
 
 if __name__ == '__main__':
@@ -182,9 +218,18 @@ if __name__ == '__main__':
         if not len(diodes):
             print("No 'D*' components found in schem")
         else:
+            
             base_diode = diodes[0]
-            print(f'Using diode {base_diode.property.Reference.value}')
-            createAndWireLEDs(schem, base_diode, 10, 10, len(diodes))
+            print(f'Using diode {base_diode.property.Reference.value}\n\n')
+            
+            
+            grid_or_charly = input("Create XY grid (XY) or charlieplex (CP)?  [CP]: ")
+            if len(grid_or_charly) == 0 or grid_or_charly.lower().startswith('c'):
+                print("Creating charlieplex")
+                createCharlieplex(schem, base_diode, 10, 10, len(diodes))
+            else:
+                print("Creating XY grid")
+                createXYGrid(schem, base_diode, 10, 10, len(diodes))
             
             save_to = input("Path to save results to (empty to skip): ")
             if save_to is not None and len(save_to):
