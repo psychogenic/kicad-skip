@@ -164,8 +164,6 @@ def createAndWireLEDs(sch:Schematic, basedOn:Symbol,
     column_wires = []
     # ok, wire up the columns
     for col in range(numcols):
-        
-        print(f'{col}\n\n')
         # end it a bit past the first of those pull-up wires
         firstwireidx = 0
         first_wire = cath_wires[firstwireidx][col]
