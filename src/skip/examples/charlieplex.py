@@ -25,7 +25,7 @@ def to_grid(xunits:int, yunits:int):
     return ( (gridOrigin[0]*unitspace)+(xunits*unitspace), 
             (gridOrigin[1]*unitspace)+(yunits*unitspace))
             
-def createLEDs(basedOn:Symbol, numrows:int, numcols:int, start_ref_count:int=1):
+def createLEDs(basedOn:Symbol, numrows:int, numcols:int, charlie:bool, start_ref_count:int=1):
     '''
         Create a grid of closed based on some symbol
     '''
@@ -35,6 +35,11 @@ def createLEDs(basedOn:Symbol, numrows:int, numcols:int, start_ref_count:int=1):
     for row in range(numrows):
         column_leds = []
         for col in range(numcols):
+            
+            if charlie and col == row:
+                # charlieplexing, skip dead led
+                column_leds.append(None)
+                continue
             # clone the symbol
             newD = basedOn.clone()
                 
@@ -56,14 +61,15 @@ def createLEDs(basedOn:Symbol, numrows:int, numcols:int, start_ref_count:int=1):
 
 def createAndWireLEDs(sch:Schematic, basedOn:Symbol, 
                       numrows:int, numcols:int, 
-                      row_label_prefix:str, 
+                      charlie:bool,
                       start_ref_count:int=1):
     '''
         Get the grid of cloned diodes, and wire them up, with junctions and labels.
     
     '''
-    led_table = createLEDs(basedOn, numrows, numcols, start_ref_count)
     
+    led_table = createLEDs(basedOn, numrows, numcols, charlie, start_ref_count)
+    row_label_prefix = 'CHRLY' if charlie else 'ROW'
     # make Ks in columns, As in rows
     an_wires = []
     cath_wires = []
@@ -75,6 +81,10 @@ def createAndWireLEDs(sch:Schematic, basedOn:Symbol,
         
         cathode_wires = []
         for a_led in a_row:
+            if a_led is None:
+                pu_wires.append(None)
+                cathode_wires.append(None)
+                continue
             # depending on left or right orientation, we'll want to 
             # draw our wires ou
             awire_direction = -1 if a_led.at.value[2] == 180 else 1
@@ -122,13 +132,23 @@ def createAndWireLEDs(sch:Schematic, basedOn:Symbol,
     for rw in an_wires:
         # create a wire from last "pu" wire of the row, going past first
         join_wire = sch.wire.new()
-        join_wire.start_at(rw[-1].end.value) # starts on end point of last up wire in row
+        
+        endwire_idx = -1
+        while rw[endwire_idx] is None:
+            endwire_idx -= 1
+        
+        join_wire.start_at(rw[endwire_idx].end.value) # starts on end point of last up wire in row
         
         # end it a bit past the first of those pull-up wires
-        first_wire_conn_point = rw[0].end.value 
+        firstwireidx = 0
+        while rw[firstwireidx] is None:
+            firstwireidx += 1
+        first_wire_conn_point = rw[firstwireidx].end.value 
         join_wire.end_at([first_wire_conn_point[0] - units_to_mm(4), first_wire_conn_point[1]])
         # lets add some junctions
         for w in rw:
+            if w is None:
+                continue
             junc = sch.junction.new()
             junc.move(w.end.value[0], w.end.value[1])
             
@@ -145,8 +165,20 @@ def createAndWireLEDs(sch:Schematic, basedOn:Symbol,
     # ok, wire up the columns
     for col in range(numcols):
         
-        first_wire = cath_wires[0][col]
-        last_wire = cath_wires[-1][col]
+        print(f'{col}\n\n')
+        # end it a bit past the first of those pull-up wires
+        firstwireidx = 0
+        first_wire = cath_wires[firstwireidx][col]
+        while first_wire is None:
+            firstwireidx += 1
+            first_wire = cath_wires[firstwireidx][col]
+            
+        lastwireidx = -1
+        
+        last_wire = cath_wires[lastwireidx][col]
+        while last_wire is None:
+            lastwireidx -= 1
+            last_wire = cath_wires[lastwireidx][col]
         
         # we want a wire that goes down from first to past the bottom one
         join_wire = sch.wire.new()
@@ -161,6 +193,8 @@ def createAndWireLEDs(sch:Schematic, basedOn:Symbol,
         column_wires.append(join_wire)
         # add some junctions
         for rowidx in range(1, numrows):
+            if cath_wires[rowidx][col] is None:
+                continue
             end_coords = cath_wires[rowidx][col].end.value
             junc = sch.junction.new()
             junc.move(end_coords[0], end_coords[1])
@@ -172,7 +206,7 @@ def createAndWireLEDs(sch:Schematic, basedOn:Symbol,
 def createXYGrid(sch:Schematic, basedOn:Symbol, 
                       numrows:int, numcols:int, start_ref_count:int=1):
     
-    column_wires = createAndWireLEDs(sch, basedOn, numrows, numcols, 'ROW', start_ref_count)
+    column_wires = createAndWireLEDs(sch, basedOn, numrows, numcols, charlie=False, start_ref_count=start_ref_count)
     
     col_count = 0
     for join_wire in column_wires:
@@ -189,7 +223,7 @@ def createXYGrid(sch:Schematic, basedOn:Symbol,
 def createCharlieplex(sch:Schematic, basedOn:Symbol, 
                       numrows:int, numcols:int, start_ref_count:int=1):
     
-    column_wires = createAndWireLEDs(sch, basedOn, numrows, numcols, 'CHRLY', start_ref_count)
+    column_wires = createAndWireLEDs(sch, basedOn, numrows, numcols, charlie=True, start_ref_count=start_ref_count)
     
     col_count = 0
     for join_wire in column_wires:
