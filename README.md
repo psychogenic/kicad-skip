@@ -39,7 +39,7 @@ I've also put up a [Scripting For Kicad Schematics In Python](https://inductive-
 
 This array of LEDs 
 
-![Scripted Charlieplex](https://raw.githubusercontent.com/psychogenic/kicad-skip/main/img/charliegen.png)
+![Scripted Charlieplex](https://raw.githubusercontent.com/psychogenic/kicad-skip/main/img/charlieplex.png)
 
 was created, wired up and labelled with a short script, available in an [example](https://github.com/psychogenic/kicad-skip/blob/main/src/skip/examples/charlieplex.py).  The example now provides for both XY grid and charlieplexed arrays, and shows how to clone elements, wire things up, and play with both types of label.
 
