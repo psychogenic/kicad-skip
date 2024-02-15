@@ -10,7 +10,7 @@ efficient and enjoyable.
 
 ## Main features
 
-   * Explore, modify and create elements of a schematic using Python
+   * Explore, modify and create elements of a schematic or PCB using Python
    
    * Access to every bit of the source file using a common API
    
@@ -30,9 +30,15 @@ I've put out an intro video where I walk through some REPL usage and create a LE
 
 I've also put up a [Scripting For Kicad Schematics In Python](https://inductive-kickback.com/2024/02/scripting-for-kicad-schematics-in-python/) blog post, with some intro, background and hopefully more human-friendly reading.
 
-### Explore the schematic
+### Explore the schematic or PCB
+
+You can load a schematic or PCB in a Python shell, and the system provides facilities to easily traverse and inspect the elements.
+
 
 ![REPL Friendly](https://raw.githubusercontent.com/psychogenic/kicad-skip/main/img/repl.png)
+
+
+Above is a sample of interaction with a schematic.  The same holds true for PCBs (`.kicad_pcb` files), though to date less effort has been put towards enhancing basic functions (but see the PCB section below).
 
 
 ### Script away drudgery
@@ -73,7 +79,8 @@ Kicad schematic, layout and other files are stored as trees of s-expressions, li
 which are great for machine parsing, but not so much for a quick scripted manipulation.
 
 Though you can use the lib to quickly explore and modify the contents of any s-expression file,
-skip is optimized for use with kicad schematics (eeschema *kicad_sch* files).
+skip is optimized for use with kicad schematics (eeschema *kicad_sch* files), with some enhanced 
+support for important elements of PCB layout files as well.
 
 
 ## Examples
@@ -301,10 +308,113 @@ This will return any label, global label or symbol with the constrained bounds.
 
 ```
 
+
+## PCB layout
+
+All the same basic functions work for `.kicad_pcb` layout files as well.
+
+Once you've created a PCB
+
+```
+# load a PCB
+>>> import skip
+>>> pcb = skip.PCB('/tmp/tt.kicad_pcb')
+```
+
+The most consequential attributes available will likely be
+
+   * `footprint`: a collection of the Footprints available (accessible by index or reference)
+   * `net`: collection of nets (accessible by index or name, e.g. `pcb.net.GND`)
+   * `layers`: collection of layers (accessible by index or name, `pcb.layers.Edge_Cuts`)
+   * `segment` and `via` collections 
+   * `gr_*` graphical elements collection (gr_text, gr_rect, gr_line, gr_arc etc)   
+
+### Sample interaction
+```
+# code-completion and access-by-name for footprints
+>>> pcb.footprint.D
+pcb.footprint.D1  pcb.footprint.D3  pcb.footprint.D5
+pcb.footprint.D2  pcb.footprint.D4  pcb.footprint.D6
+>>> pcb.footprint.D1
+<Footprint D1>
+# wrapped objects for commonly used attributes like layers and nets
+>>> pcb.footprint.D1.layer
+<Layer 0 F.Cu (signal)>
+>>> pcb.footprint.D1.layer = pcb.layers.B_Cu
+>>> pcb.footprint.D1.layer
+<Layer 31 B.Cu (signal)>
+>>> pcb.footprint.D1.layer.type
+'signal' 
+# access to all graphical elements, like text and polygons, rectangles etc
+>>> txt = pcb.gr_text[35]
+>>> txt
+<gr_text @ [145.9, 128.9] "OUTPUT">
+>>> txt.effects.font
+<font bold>
+>>> txt.effects.font.value
+'bold'
+>>>
+# vias and segments and everything in there
+>>> seg = pcb.segment[-2]
+>>> seg
+<Segment in /vfused on F.Cu>
+>>> seg.net
+<Net 113 /vfused>
+>>> seg.layer
+<Layer 0 F.Cu (signal)>
+>>> 
+
+```
+
+### PCB Element enhancements
+As with schematic elements, anything with an `at` attribute can be moved or translated.
+
+```
+>>> pcb.via[33].at
+<at [137.1, 62.5]>
+>>> pcb.via[33].move(pcb.footprint.R20.at)
+>>> pcb.via[33].at
+<at [78.7, 63.3]>
+```
+
+Things with a single associated layer will provide a reference to the top-level layer object itself
+
+
+```
+>>> pcb.footprint.R10.layer
+<Layer 0 F.Cu (signal)>
+>>> pcb.footprint.R10.layer.type
+'signal'
+>>> pcb.footprint.R10.layer.name
+'F.Cu'
+```
+
+and these may be set using the same, or using the layer string name:
+
+```
+>>> pcb.footprint.R10.layer
+<Layer 0 F.Cu (signal)>
+>>> pcb.footprint.R10.layer = pcb.layers.B_Cu
+>>> pcb.footprint.R10.layer
+<Layer 31 B.Cu (signal)>
+>>> pcb.footprint.R10.layer = 'F.Cu'
+>>> pcb.footprint.R10.layer
+<Layer 0 F.Cu (signal)>
+>>> 
+>>> pcb.segment[42].layer
+<Layer 0 F.Cu (signal)>
+>>> 
+>>> pcb.segment[42].layer = pcb.layers.F_SilkS
+>>> 
+>>> pcb.segment[42].layer
+<Layer 37 F.SilkS (user)>
+>>> 
+```
+
+
 # API
 
 Further documentation to come.  For now, use the above, load a schematic in a console, and explore what's available using TAB-/code-completion.
-
 
 ## Top level source files
 
@@ -419,7 +529,7 @@ Some common examples that will be found are:
   
 Elements with `at` may be re-positioned, using either
 
-  * `move(x, y, [rotation])` to set the location; or
+  * `move(x, y, [rotation])` to set the location (you may also pass a single list, or an `.at` object to this method); or
   
   * `translation(deltax, deltay)` to shift the location
   
