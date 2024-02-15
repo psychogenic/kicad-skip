@@ -178,6 +178,13 @@ class Symbol(SymbolBase):
         self._sympins_cont_cache = None 
         
     @property 
+    def Reference(self):
+        return self.property.Reference 
+    
+    @property
+    def Value(self):
+        return self.property.Value
+    @property 
     def allReferences(self):
         return self.getElementsByEntityType('reference')
     
