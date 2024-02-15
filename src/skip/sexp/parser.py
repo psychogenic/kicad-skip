@@ -322,17 +322,31 @@ class ParsedValue(AccessesTree):
     
     
     
-    def _move_method(self, xcoord:float, ycoord:float, rotation:int=None):
+    def _move_method(self, xcoord:float, ycoord:float=None, rotation:int=None):
         '''
             update this element's "at" value to place it at xcoord, ycoord.
             Rotation param may be passed to set rotation, this must be 
             an int of 0,90,180 or 270
+            
+            @param xcoord: x-coordinate float, or xy list/tuple (so you can use .at.value)
+            @param ycoord: y-coordinate float, required if xcoord isn't a list/tuple
+            @param rotation: required int if you wish to affect rotation
         '''
         rot = None
+        
+        if isinstance(xcoord, ParsedValue) and isinstance(xcoord.value, (list)):
+            xcoord = xcoord.value
+            
+        if isinstance(xcoord, (list, tuple)) and len(xcoord) > 1:
+            clist = xcoord 
+            xcoord = clist[0]
+            ycoord = clist[1]
+        
         if len(self.at.value) > 2:
             rot = self.at.value[2]
             if rotation is not None:
                 rot = rotation 
+            
         
         deltax = xcoord - self.at.value[0]
         deltay = ycoord - self.at.value[1]
