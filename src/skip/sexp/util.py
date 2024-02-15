@@ -21,7 +21,7 @@ def writeTree(fpath:str, tree):
         # clumped into a bunch
         as_str = sexpdata.dumps(tree)
         for elname in ['property', 'symbol', 'wire', 'data', 'label', 
-                       'global_label', 'text', 'junction', 'polyline', 'rectangle']:
+                       'global_label', 'text', 'junction', 'polyline', 'rectangle', 'xy']:
             as_str = re.sub(f'\(\s*{elname}', f'\n\n({elname}', as_str)
             
         out_lines = []
