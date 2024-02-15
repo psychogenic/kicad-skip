@@ -159,9 +159,11 @@ class LayerPropertyHandler:
         
         if isinstance(setTo, str) and setTo in top.layers:
             self._layer_el.value = setTo 
+            return 
             
         if isinstance(setTo, int) and setTo in top.layers:
             self._layer_el.value = top.layers[setTo].name
+            return
             
         log.error(f"Don't know how to set layer '{setTo}' for footprint?")
         
