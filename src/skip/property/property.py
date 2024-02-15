@@ -100,8 +100,9 @@ class ElementWithPropertiesWrapper(ParsedValueWrapper):
     def __init__(self, pv:ParsedValue):
         super().__init__(pv)
         props = []
-        for p in pv.property:
-            props.append(PropertyString(p))
+        if hasattr(pv, 'property'):
+            for p in pv.property:
+                props.append(PropertyString(p))
         
         pv.property = PropertyCollection(self, props)
         

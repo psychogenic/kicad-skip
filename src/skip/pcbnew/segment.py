@@ -7,12 +7,14 @@ Created on Feb 1, 2024
 
 
 from skip.sexp.parser import ParsedValue, ParsedValueWrapper
+from skip.pcbnew.layer import LayerPropertyHandler
 
 class SegmentWrapper(ParsedValueWrapper):
     def __init__(self, v:ParsedValue):
         super().__init__(v)
         self._net = None 
         self._layer = None
+        self._layer_handler = LayerPropertyHandler(v.layer, self.parent)
         
     def translation(self, by_x:float, by_y:float):
         '''
@@ -29,27 +31,12 @@ class SegmentWrapper(ParsedValueWrapper):
     
     @property
     def layer(self):
-        if self._layer is None:
-            layer_name = self.wrapped_parsed_value.layer.value
-            pcb = self.parent # segments are top level
-            if layer_name in pcb.layers:
-                self._layer = pcb.layers[layer_name]
-            else:
-                self._layer = -1 # something wrong
-                
-        return self._layer
+        return self._layer_handler.get()
     
     
     @layer.setter 
     def layer(self, setTo):
-        if isinstance(setTo, str):
-            layer_name = setTo
-        else:
-            layer_name = setTo.name # needs to be a thing with name ya
-        
-        self.wrapped_parsed_value.layer.value = layer_name 
-        self._layer = None 
-        return 
+        return self._layer_handler.set(setTo)
         
         
     

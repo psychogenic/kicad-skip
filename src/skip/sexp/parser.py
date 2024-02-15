@@ -610,7 +610,7 @@ class ArbitraryNamedParsedValueWrapper(ParsedValueWrapper):
         self._name_coords.append(1)
         self._val_coords.append(2)
         
-        name = self._cleanse_name(pv.children[0])
+        name = self._cleanse_name(pv.toString(pv.children[0]))
         self._name = name
     
     def _cleanse_name(self, nm:str):

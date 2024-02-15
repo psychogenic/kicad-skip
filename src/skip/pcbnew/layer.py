@@ -9,6 +9,8 @@ import re
 from skip.collection import NamedElementCollection
 from skip.sexp.parser import ParsedValue, ParsedValueWrapper
 
+import logging 
+log = logging.getLogger(__name__)
 class LayerCollection(NamedElementCollection):
     '''
        
@@ -129,3 +131,38 @@ class LayersListWrapper(ParsedValueWrapper):
     
     def __repr__(self):
         return f'<Layers ({len(self)})>'
+    
+    
+    
+class LayerPropertyHandler:
+    def __init__(self, pvLayer:ParsedValue, topLevelParent):
+        self._layer_el = pvLayer 
+        self._layer_cache = None
+        self._top = topLevelParent
+        
+    def get(self):
+        if self._layer_cache is not None:
+            return self._layer_cache
+        top = self._top 
+        if self._layer_el.value in top.layers:
+            return top.layers[self._layer_el.value]
+        
+        log.warn(f"Can't find layer {self._layer_el.value} in layers?")
+        return self._layer_el
+    
+    def set(self, setTo):
+        self._layer_cache = None
+        top = self._top 
+        if hasattr(setTo, 'name') and setTo.name is not None and setTo.name in top.layers:
+            self._layer_el.value = setTo.name 
+            return 
+        
+        if isinstance(setTo, str) and setTo in top.layers:
+            self._layer_el.value = setTo 
+            
+        if isinstance(setTo, int) and setTo in top.layers:
+            self._layer_el.value = top.layers[setTo].name
+            
+        log.error(f"Don't know how to set layer '{setTo}' for footprint?")
+        
+        return 

@@ -14,6 +14,8 @@ from skip.sexp.sourcefile import SourceFile
 from skip.pcbnew.layer import  LayersListWrapper
 from skip.pcbnew.net import NetCollection, NetWrapper
 from skip.pcbnew.segment import SegmentWrapper
+from skip.pcbnew.footprint import FootprintWrapper, FootprintCollection
+from skip.pcbnew.graphical import GraphicalElementWrapper, TextElementWrapper, PolygonWrapper
 import logging 
 log = logging.getLogger(__name__)
 
@@ -56,6 +58,7 @@ class PCB(SourceFile):
         dedicatedCollection = {
         
             #'layers': LayerCollection
+            'footprint': FootprintCollection,
             'net': NetCollection
         }
         if entity_type in dedicatedCollection:
@@ -66,7 +69,16 @@ class PCB(SourceFile):
         dedicatedWrapper = {
             'layers': LayersListWrapper, # yeah, weird: one element that's a list for some reason
             'net': NetWrapper,
-            'segment': SegmentWrapper
+            'segment': SegmentWrapper,
+            'footprint': FootprintWrapper,
+            
+            # gr_*
+            'gr_text': TextElementWrapper,
+            'gr_arc': GraphicalElementWrapper,
+            'gr_circle': GraphicalElementWrapper,
+            'gr_line': GraphicalElementWrapper,
+            'gr_poly': PolygonWrapper,
+            'gr_rect': GraphicalElementWrapper,
         }
         if entity_type in dedicatedWrapper:
             return dedicatedWrapper[entity_type]
