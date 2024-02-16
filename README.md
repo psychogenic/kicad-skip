@@ -21,6 +21,28 @@ efficient and enjoyable.
    
    * Lots of REPL-friendly features, so you can see at a glance what an element is, access it by name (e.g. *schematic.symbol.R14.dnp*), use **TAB-completion** 
    
+### Installation
+
+Get a release here or just use pip!
+
+```
+$ pip install kicad-skip
+
+Downloading kicad_skip-0.2.5-py3-none-any.whl (62 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 62.8/62.8 kB 3.9 MB/s eta 0:00:00
+Installing collected packages: kicad-skip
+Successfully installed kicad-skip-0.2.5
+
+$ python
+Python 3.10.12 (main, Nov 20 2023, 15:14:05) [GCC 11.4.0] on linux
+>>> import skip
+>>> skip
+<module 'skip' from '/path/to/lib/python3.10/site-packages/skip/__init__.py'>
+>>> 
+````
+
+
+
 ### Overview and Walk-through video
 
 I've put out an intro video where I walk through some REPL usage and create a LED array generator.  To see that click on:

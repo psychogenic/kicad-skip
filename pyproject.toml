@@ -3,8 +3,8 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "kicad-skip_psychogenic"
-version = "0.2.2"
+name = "kicad-skip"
+version = "0.2.5"
 authors = [
   { name="Pat Deegan" },
 ]
@@ -15,6 +15,9 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)",
     "Operating System :: OS Independent",
+]
+dependencies = [
+    'sexpdata >= 0.0.3',
 ]
 
 [project.urls]
