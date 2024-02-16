@@ -11,7 +11,6 @@ import re
 import copy
 
 import logging 
-from dns.rdataclass import NONE
 log = logging.getLogger(__name__)
 class AccessesTree:
     def __init__(self, sourceTree):
